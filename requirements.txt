@@ -1,0 +1,9 @@
+flask
+gunicorn
+whitenoise
+flask_pymongo
+flask_cors
+requests
+dnspython
+pandas
+numpy
