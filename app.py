@@ -92,10 +92,15 @@ def reload_top100_sql():
         counter = 0
         for lines in csvFile:
 
+            weekid = datetime.datetime.strptime(str(lines[wIn]), '%m/%d/%Y')
+            year = weekid.year
+
+            if year < 2010 : continue   # ignore the old records for now.
+
             try:
                 id = 0
                 sql_query = """select id, top_position, weeksonchart from song where songid = %s and instnce = %s """
-                # print(sql_query,(lines[sidIn],int(lines[iIn])))
+
                 cursor.execute(sql_query,(lines[sidIn],int(lines[iIn])))
 
                 record = cursor.fetchone()
@@ -104,10 +109,9 @@ def reload_top100_sql():
                     postgres_insert_query = """ INSERT INTO song (songid, name, performer,top_position,instnce,weeksonchart) VALUES (%s,%s,%s,%s,%s,%s)"""
                     record_to_insert = (lines[sidIn], lines[sIn], lines[pIn],int(lines[ppIn]),int(lines[iIn]),int(lines[wocIn]))
                     cursor.execute(postgres_insert_query, record_to_insert)
-                    # db_conn.commit()
+
                     # need to retrieve the id
                     sql_query = """select id, top_position, weeksonchart from song where songid = %s and instnce = %s """
-                    # print(sql_query,(lines[sidIn],int(lines[iIn])))
                                     
                     cursor.execute(sql_query,(lines[sidIn],int(lines[iIn])))
                     record = cursor.fetchone()
@@ -123,7 +127,7 @@ def reload_top100_sql():
                     if weeksonchart < int(lines[wocIn]): 
                         weeksonchart = int(lines[wocIn])
                         updated = True
-                    # print(id,updated,weeksonchart,top_position,lines[ppIn],lines[wocIn])
+
                     if updated:
                         sql_update_query = """UPDATE song set top_position = %s, weeksonchart = %s where id = %s"""
                         cursor.execute(sql_update_query,(top_position,weeksonchart,id))
@@ -132,30 +136,31 @@ def reload_top100_sql():
                 # write to other tables
 
                 sql_query = "select id from weeks where weekinfo = '" + str(lines[wIn]) + "'"
-                # print(sql_query,lines[wIn])
-                #cursor.execute(sql_query,(str(lines[wIn])))
+
                 cursor.execute(sql_query)
                 record = cursor.fetchone()
                 if record == None:
-                    postgres_insert_query = "INSERT INTO weeks (weekinfo) VALUES ('" + str(lines[wIn]) + "')"
+
+                    postgres_insert_query = "INSERT INTO weeks (weekinfo, weekdate, year) VALUES ('" + str(lines[wIn]) + "', '" + str(lines[wIn]) + "' , " + str(year) + ")"
                     cursor.execute(postgres_insert_query)
-                    # db_conn.commit()      # move commit to after everything is updated
+
                     # need to retrieve the id
                     sql_query = "select id from weeks where weekinfo = '" + str(lines[wIn]) + "'"
                     cursor.execute(sql_query)
                     record = cursor.fetchone()
 
                 weekid = record[0]
+
                 # write the week specific information for the song
                 sql_query = """select * from weekly where id = %s and weekid = %s"""
                 cursor.execute(sql_query,(id, weekid))
                 record = cursor.fetchone()
+
                 # was a record found?
                 if record == None:
                     postgres_insert_query = """ INSERT INTO weekly (id, weekid, url,pos,top_pos_wk) VALUES (%s,%s,%s,%s,%s)"""
                     record_to_insert = (id, weekid, lines[uIn],int(lines[wpIn]),int(lines[ppIn]))
                     cursor.execute(postgres_insert_query, record_to_insert)
-                    # db_conn.commit()      # move commit to after everything is updated
 
             except Exception:
                 exc_type, exc_tb = sys.exc_info()
@@ -172,7 +177,7 @@ def reload_top100_sql():
                 if counter % 10000 == 0: print("next record",counter)
                 # if counter > 200: break
 
-    return "finished"
+    return root()
 
 # get the songs for a performer from SQL DB
 @app.route("/get_top100_sql/performer",  methods=["GET"])
@@ -319,7 +324,7 @@ def get_top100_sql_search(searchInput):
         db_conn2 = psycopg2.connect(DATABASE_URL, sslmode='require')
     cursor2 = db_conn2.cursor()
 
-    sql_order = " order by weekinfo desc , name "
+    sql_order = " order by weekdate desc , name "
     
     try:
         
