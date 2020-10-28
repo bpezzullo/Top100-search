@@ -16,6 +16,7 @@ import sys
 #----- Import API key ---------------
 from config import username, password, dbname, USERNAME, PASSWORD
 
+DATABASE_URL = os.environ['DATABASE_URL']
 
 app = Flask(__name__, static_url_path='', static_folder='static')
 CORS(app, resources={
@@ -155,6 +156,9 @@ wocIn = 9           # weeks on chart index
 @cross_origin()
 def reload_top100_sql():
     # access the top 100 collection
+
+
+    # db_conn = psycopg2.connect(DATABASE_URL, sslmode='require')
     db_conn = psycopg2.connect(host=t_host, port=t_port, dbname=t_dbname, user=USERNAME, password=PASSWORD)
     cursor = db_conn.cursor()
 

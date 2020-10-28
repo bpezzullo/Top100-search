@@ -7,7 +7,7 @@ var weekkey = [], wex, weekselected = [];
 var peakkey = [], pox, peekselected = [];
 var itemselected = [];
 var local = ''
-local = 'http://127.0.0.1:5000'
+// local = 'http://127.0.0.1:5000'
 
 // fucntion to generate the text for the drop downs.
 
