@@ -17,7 +17,7 @@ import datetime
 #----- Import API key ---------------
 from config import username, password, dbname, USERNAME, PASSWORD
 
-# DATABASE_URL = os.environ['DATABASE_URL']
+DATABASE_URL = os.environ['DATABASE_URL']
 
 app = Flask(__name__, static_url_path='', static_folder='static')
 CORS(app, resources={
