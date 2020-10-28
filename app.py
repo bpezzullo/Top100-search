@@ -1,6 +1,5 @@
 from flask import Flask, render_template, Response, jsonify
 from bson import json_util
-from flask_pymongo import PyMongo
 from flask_cors import CORS, cross_origin
 import psycopg2
 import requests
@@ -8,15 +7,17 @@ import json
 import csv 
 import os
 import sys
+import datetime
+
 # import spotipy
 # import spotipy.util as util
 # from spotipy.oauth2 import SpotifyClientCredentials
 
 
 #----- Import API key ---------------
-# from config import username, password, dbname, USERNAME, PASSWORD
+from config import username, password, dbname, USERNAME, PASSWORD
 
-DATABASE_URL = os.environ['DATABASE_URL']
+# DATABASE_URL = os.environ['DATABASE_URL']
 
 app = Flask(__name__, static_url_path='', static_folder='static')
 CORS(app, resources={
@@ -27,16 +28,10 @@ CORS(app, resources={
 app.config['CORS_HEADERS'] = 'Content-Type'
 app.config['CORS_ORIGINS'] = '*'
 
-# Use flask_pymongo to set up mongo connection
-
-
-# app.config['MONGO_URI'] = 'mongodb+srv://' + username + ':' + password + '@cluster0.jvrf7.mongodb.net/' + dbname + '?retryWrites=true&w=majority'
-
 # run in debug mode
 app.debug = True
-
-mongo = PyMongo(app)
-   
+local= False
+  
 # class Songs:
 #     def __init__(self,songArray):
 #         self.songName = songArray[3]
@@ -46,18 +41,12 @@ mongo = PyMongo(app)
 #         self.weeksonChart = songArray[-1]
 
 
-def m_insert(name,data):
-    topcol = mongo.db.top100
-    dataset = {"type": name, "result" : data}
-    topcol.insert_one(dataset)
-    return
-
 #function that filters vowels
 def filterLetters(letter):
     letters = ['a','b','c','d','e','f','g','h','i','j','k','l','m','n','o','p','q','r','s','t','u','v','w','x','y','z',',']
     return (letter in letters)    
 
-# Database connection setup
+# Database connection setup for local system
 t_host = "localhost"
 t_port = "5432"
 t_dbname = "top100"
@@ -67,76 +56,6 @@ t_dbname = "top100"
 def root():
     # return render_template('index.html')
     return app.send_static_file("index.html")
-
-
-# get the top100 song information from mongodb
-@app.route("/get_top100", methods=["GET"])
-@cross_origin()
-def get_geo():
-
-    # access the top 100 collection
-    topcol = mongo.db.top100
-
-    myquery = { "type": "top100" }
-
-    #Are the documents there?
-    x = topcol.count_documents(myquery)
-    data = {}
-    if x == 0:
-        print("No Top 100 data")
-
-    else:
-        topdoc = topcol.find_one(myquery)
-        print(topdoc)
-        data = json.loads(json_util.dumps(topdoc))
-
-    return jsonify(data)
-
-# call the API to load the top 100 file and store into Mongo DB if not there.
-@app.route("/reload_top100", methods=["GET"])
-@cross_origin()
-def reload_geo():
-    # access the top 100 collection
-    topcol = mongo.db.top100
-
-    hot100 = os.path.join("data", "HotStuff.csv")
-
-    myquery = { "type": "top100" }
-
-    #Are the documents there?
-    x = topcol.count_documents(myquery)
-
-    if x == 0:
-        # if col == 0:
-        # if the file file is not stored, read the file from the DB
-
-        with open(hot100, mode='r') as file:
-            headers = file.readline()
-
-            # parse the headers and clean them up.  Used to create a dictionary 
-            headers = headers.lower()
-            hdrFiltered = ''
-            for letter in headers:
-                if filterLetters(letter):
-                    hdrFiltered += letter
-            hdr_list = str(hdrFiltered).split(',')
-            print(hdr_list)
-
-            # reading the CSV file
-            csvFile = csv.reader(file)
-
-            # counter = 0
-            for lines in csvFile:
-                test = zip(hdr_list,lines)
-                songDict = dict(test)
-                try:
-                    topcol.update_one({'songid': songDict['songid']},{'$set':songDict},upsert=True)
-
-                except:
-                    print("something happened")
-                    break
-
-    return "finished"
 
 
 uIn = 0             # URL index
@@ -157,9 +76,9 @@ wocIn = 9           # weeks on chart index
 def reload_top100_sql():
     # access the top 100 collection
 
-
-    db_conn = psycopg2.connect(DATABASE_URL, sslmode='require')
-#    db_conn = psycopg2.connect(host=t_host, port=t_port, dbname=t_dbname, user=USERNAME, password=PASSWORD)
+    if local :db_conn = psycopg2.connect(host=t_host, port=t_port, dbname=t_dbname, user=USERNAME, password=PASSWORD)
+    else: 
+        db_conn = psycopg2.connect(DATABASE_URL, sslmode='require')
     cursor = db_conn.cursor()
 
     hot100 = os.path.join("data", "HotStuff.csv")
@@ -263,8 +182,10 @@ def get_top100_sql_performer(performer= '*'):
 
     # access the top 100 collection
 
-    db_conn2 = psycopg2.connect(DATABASE_URL, sslmode='require')
-#    db_conn = psycopg2.connect(host=t_host, port=t_port, dbname=t_dbname, user=USERNAME, password=PASSWORD)
+    if local :
+        db_conn2 = psycopg2.connect(host=t_host, port=t_port, dbname=t_dbname, user=USERNAME, password=PASSWORD)
+    else: 
+        db_conn2 = psycopg2.connect(DATABASE_URL, sslmode='require')
     cursor2 = db_conn2.cursor()
     
     try:
@@ -298,8 +219,10 @@ def get_top100_sql_performer(performer= '*'):
 def get_top100_sql_song(song = '*'):
 
     # access the top 100 collection
-    db_conn2 = psycopg2.connect(DATABASE_URL, sslmode='require')
-#    db_conn = psycopg2.connect(host=t_host, port=t_port, dbname=t_dbname, user=USERNAME, password=PASSWORD)
+    if local :
+        db_conn2 = psycopg2.connect(host=t_host, port=t_port, dbname=t_dbname, user=USERNAME, password=PASSWORD)
+    else: 
+        db_conn2 = psycopg2.connect(DATABASE_URL, sslmode='require')
     cursor2 = db_conn2.cursor()
 
     try:
@@ -341,8 +264,10 @@ def check_string(word):
 def get_top100_sql_song_details(song):
 
     # access the top 100 collection
-    db_conn2 = psycopg2.connect(DATABASE_URL, sslmode='require')
-#    db_conn = psycopg2.connect(host=t_host, port=t_port, dbname=t_dbname, user=USERNAME, password=PASSWORD)
+    if local :
+        db_conn2 = psycopg2.connect(host=t_host, port=t_port, dbname=t_dbname, user=USERNAME, password=PASSWORD)
+    else: 
+        db_conn2 = psycopg2.connect(DATABASE_URL, sslmode='require')
     cursor2 = db_conn2.cursor()
 
     try:
@@ -388,8 +313,10 @@ def get_top100_sql_search(searchInput):
         if srchkey[1] != 'All': sql_query_where += "and " + lower + srchkey[0] + lower2 + " = " + lower + "'" + check_string(srchkey[1]) + "'" + lower2
         index += 1
     # access top 100 collection
-    db_conn2 = psycopg2.connect(DATABASE_URL, sslmode='require')
-#    db_conn = psycopg2.connect(host=t_host, port=t_port, dbname=t_dbname, user=USERNAME, password=PASSWORD)
+    if local :
+        db_conn2 = psycopg2.connect(host=t_host, port=t_port, dbname=t_dbname, user=USERNAME, password=PASSWORD)
+    else: 
+        db_conn2 = psycopg2.connect(DATABASE_URL, sslmode='require')
     cursor2 = db_conn2.cursor()
 
     sql_order = " order by weekinfo desc , name "
@@ -426,8 +353,10 @@ def get_top100_sql_week(weekid = ''):
     
     record = []
     # access top 100 collection
-    db_conn2 = psycopg2.connect(DATABASE_URL, sslmode='require')
-#    db_conn = psycopg2.connect(host=t_host, port=t_port, dbname=t_dbname, user=USERNAME, password=PASSWORD)
+    if local :
+        db_conn2 = psycopg2.connect(host=t_host, port=t_port, dbname=t_dbname, user=USERNAME, password=PASSWORD)
+    else: 
+        db_conn2 = psycopg2.connect(DATABASE_URL, sslmode='require')
     cursor2 = db_conn2.cursor()
 
     if weekid == '': 
