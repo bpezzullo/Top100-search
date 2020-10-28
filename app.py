@@ -14,7 +14,7 @@ import sys
 
 
 #----- Import API key ---------------
-from config import username, password, dbname, USERNAME, PASSWORD
+# from config import username, password, dbname, USERNAME, PASSWORD
 
 DATABASE_URL = os.environ['DATABASE_URL']
 
