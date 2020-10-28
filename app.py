@@ -30,7 +30,7 @@ app.config['CORS_ORIGINS'] = '*'
 # Use flask_pymongo to set up mongo connection
 
 
-app.config['MONGO_URI'] = 'mongodb+srv://' + username + ':' + password + '@cluster0.jvrf7.mongodb.net/' + dbname + '?retryWrites=true&w=majority'
+# app.config['MONGO_URI'] = 'mongodb+srv://' + username + ':' + password + '@cluster0.jvrf7.mongodb.net/' + dbname + '?retryWrites=true&w=majority'
 
 # run in debug mode
 app.debug = True
@@ -158,8 +158,8 @@ def reload_top100_sql():
     # access the top 100 collection
 
 
-    # db_conn = psycopg2.connect(DATABASE_URL, sslmode='require')
-    db_conn = psycopg2.connect(host=t_host, port=t_port, dbname=t_dbname, user=USERNAME, password=PASSWORD)
+    db_conn = psycopg2.connect(DATABASE_URL, sslmode='require')
+#    db_conn = psycopg2.connect(host=t_host, port=t_port, dbname=t_dbname, user=USERNAME, password=PASSWORD)
     cursor = db_conn.cursor()
 
     hot100 = os.path.join("data", "HotStuff.csv")
@@ -262,7 +262,9 @@ def reload_top100_sql():
 def get_top100_sql_performer(performer= '*'):
 
     # access the top 100 collection
-    db_conn2 = psycopg2.connect(host=t_host, port=t_port, dbname=t_dbname, user=USERNAME, password=PASSWORD)
+
+    db_conn = psycopg2.connect(DATABASE_URL, sslmode='require')
+#    db_conn = psycopg2.connect(host=t_host, port=t_port, dbname=t_dbname, user=USERNAME, password=PASSWORD)
     cursor2 = db_conn2.cursor()
     
     try:
@@ -296,7 +298,8 @@ def get_top100_sql_performer(performer= '*'):
 def get_top100_sql_song(song = '*'):
 
     # access the top 100 collection
-    db_conn2 = psycopg2.connect(host=t_host, port=t_port, dbname=t_dbname, user=USERNAME, password=PASSWORD)
+     db_conn = psycopg2.connect(DATABASE_URL, sslmode='require')
+#    db_conn = psycopg2.connect(host=t_host, port=t_port, dbname=t_dbname, user=USERNAME, password=PASSWORD)
     cursor2 = db_conn2.cursor()
 
     try:
@@ -338,7 +341,8 @@ def check_string(word):
 def get_top100_sql_song_details(song):
 
     # access the top 100 collection
-    db_conn2 = psycopg2.connect(host=t_host, port=t_port, dbname=t_dbname, user=USERNAME, password=PASSWORD)
+    db_conn = psycopg2.connect(DATABASE_URL, sslmode='require')
+#    db_conn = psycopg2.connect(host=t_host, port=t_port, dbname=t_dbname, user=USERNAME, password=PASSWORD)
     cursor2 = db_conn2.cursor()
 
     try:
@@ -384,7 +388,8 @@ def get_top100_sql_search(searchInput):
         if srchkey[1] != 'All': sql_query_where += "and " + lower + srchkey[0] + lower2 + " = " + lower + "'" + check_string(srchkey[1]) + "'" + lower2
         index += 1
     # access top 100 collection
-    db_conn2 = psycopg2.connect(host=t_host, port=t_port, dbname=t_dbname, user=USERNAME, password=PASSWORD)
+    db_conn = psycopg2.connect(DATABASE_URL, sslmode='require')
+#    db_conn = psycopg2.connect(host=t_host, port=t_port, dbname=t_dbname, user=USERNAME, password=PASSWORD)
     cursor2 = db_conn2.cursor()
 
     sql_order = " order by weekinfo desc , name "
@@ -421,7 +426,8 @@ def get_top100_sql_week(weekid = ''):
     
     record = []
     # access top 100 collection
-    db_conn2 = psycopg2.connect(host=t_host, port=t_port, dbname=t_dbname, user=USERNAME, password=PASSWORD)
+    db_conn = psycopg2.connect(DATABASE_URL, sslmode='require')
+#    db_conn = psycopg2.connect(host=t_host, port=t_port, dbname=t_dbname, user=USERNAME, password=PASSWORD)
     cursor2 = db_conn2.cursor()
 
     if weekid == '': 
