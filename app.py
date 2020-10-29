@@ -30,7 +30,8 @@ app.config['CORS_ORIGINS'] = '*'
 
 # run in debug mode
 app.debug = True
-local= False
+local = False
+notable = False
   
 # class Songs:
 #     def __init__(self,songArray):
@@ -39,6 +40,31 @@ local= False
 #         self.songID = songArray[5]
 #         self.instance = songArray[6]
 #         self.weeksonChart = songArray[-1]
+def create_tables(cursor, db_conn, notable):
+    sql_query = 'CREATE TABLE song (id bigint NOT NULL GENERATED ALWAYS AS IDENTITY ( INCREMENT 1 START 1 MINVALUE 1 MAXVALUE 1000000 CACHE 1 ),songid character varying(255) COLLATE pg_catalog."default" NOT NULL,name character varying(255) COLLATE pg_catalog."default" NOT NULL,performer character varying(255) COLLATE pg_catalog."default" NOT NULL,top_position integer,instnce integer,weeksonchart integer,CONSTRAINT song_pkey PRIMARY KEY (id))'
+    cursor.execute(sql_query)
+    sql_query = 'CREATE INDEX "Name_index" ON song USING btree (name COLLATE pg_catalog."default" ASC NULLS LAST);' 
+    cursor.execute(sql_query)
+    
+    sql_query = 'CREATE INDEX perfor_index ON song USING btree (performer COLLATE pg_catalog."default" ASC NULLS LAST);' 
+    cursor.execute(sql_query)
+
+    sql_query = 'CREATE INDEX songid_index ON song USING btree (songid COLLATE pg_catalog."default" ASC NULLS LAST);' 
+    cursor.execute(sql_query)
+
+    sql_query = 'CREATE TABLE weekly (id bigint NOT NULL, weekid integer NOT NULL, url character varying(255) COLLATE pg_catalog."default" NOT NULL, pos integer NOT NULL, top_pos_wk integer NOT NULL);' 
+    cursor.execute(sql_query)
+
+    sql_query = 'CREATE INDEX id_index ON weekly USING btree (id ASC NULLS LAST);' 
+    cursor.execute(sql_query)
+
+    sql_query = 'CREATE TABLE weeks (id bigint NOT NULL GENERATED ALWAYS AS IDENTITY ( INCREMENT 1 START 1 MINVALUE 1 MAXVALUE 10000 CACHE 1 ), weekinfo character varying(255) COLLATE pg_catalog."default" NOT NULL,weekdate date,year int,CONSTRAINT weeks_pkey PRIMARY KEY (id));' 
+    cursor.execute(sql_query)
+
+    db_conn.commit()
+    notable = False
+
+    return 
 
 
 #function that filters vowels
@@ -81,6 +107,8 @@ def reload_top100_sql():
         db_conn = psycopg2.connect(DATABASE_URL, sslmode='require')
     cursor = db_conn.cursor()
 
+    if notable : create_tables(cursor,db_conn, notable)
+
     hot100 = os.path.join("data", "HotStuff.csv")
 
     with open(hot100, mode='r') as file:
@@ -95,9 +123,10 @@ def reload_top100_sql():
             weekid = datetime.datetime.strptime(str(lines[wIn]), '%m/%d/%Y')
             year = weekid.year
 
-            if year < 2010 : continue   # ignore the old records for now.
+            if year < 2019 : continue   # ignore the old records for now.
 
             try:
+                
                 id = 0
                 sql_query = """select id, top_position, weeksonchart from song where songid = %s and instnce = %s """
 
@@ -195,6 +224,7 @@ def get_top100_sql_performer(performer= '*'):
     
     try:
         record = []
+        if notable : return jsonify(record)
         if performer != '*':
             performer = check_string(performer)         # escape any single quote characters
             sql_query = "select id, name, top_position, instnce, weeksonchart from song where lower(performer) = lower('" + performer + "')"
@@ -232,6 +262,7 @@ def get_top100_sql_song(song = '*'):
 
     try:
         record = []
+        if notable : return jsonify(record)
         if song != '*':
             song = check_string(song)
             sql_query = "select name, performer, top_position, weeksonchart from song" 
@@ -301,8 +332,11 @@ def get_top100_sql_song_details(song):
 @app.route("/get_top100_sql/search/<path:searchInput>",  methods=["GET"])
 @cross_origin()
 def get_top100_sql_search(searchInput):
+
+
     record = []
-    if searchInput == '': jsonify(record)
+    if notable : return jsonify(record)
+    if searchInput == '': return jsonify(record)
     print("have data: " + searchInput)
     sql_query_where = ''
     result = searchInput.split('/')
