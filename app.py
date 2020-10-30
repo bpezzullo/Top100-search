@@ -30,8 +30,9 @@ app.config['CORS_ORIGINS'] = '*'
 
 # run in debug mode
 app.debug = True
+global local
 local = False
-notable = False
+
   
 # class Songs:
 #     def __init__(self,songArray):
@@ -40,7 +41,7 @@ notable = False
 #         self.songID = songArray[5]
 #         self.instance = songArray[6]
 #         self.weeksonChart = songArray[-1]
-def create_tables(cursor, db_conn, notable):
+def create_tables(cursor, db_conn):
     sql_query = 'CREATE TABLE song (id bigint NOT NULL GENERATED ALWAYS AS IDENTITY ( INCREMENT 1 START 1 MINVALUE 1 MAXVALUE 1000000 CACHE 1 ),songid character varying(255) COLLATE pg_catalog."default" NOT NULL,name character varying(255) COLLATE pg_catalog."default" NOT NULL,performer character varying(255) COLLATE pg_catalog."default" NOT NULL,top_position integer,instnce integer,weeksonchart integer,CONSTRAINT song_pkey PRIMARY KEY (id))'
     cursor.execute(sql_query)
     sql_query = 'CREATE INDEX "Name_index" ON song USING btree (name COLLATE pg_catalog."default" ASC NULLS LAST);' 
@@ -62,7 +63,6 @@ def create_tables(cursor, db_conn, notable):
     cursor.execute(sql_query)
 
     db_conn.commit()
-    notable = False
 
     return 
 
@@ -107,7 +107,11 @@ def reload_top100_sql():
         db_conn = psycopg2.connect(DATABASE_URL, sslmode='require')
     cursor = db_conn.cursor()
 
-    if notable : create_tables(cursor,db_conn, notable)
+    sql_query = "SELECT EXISTS(SELECT *  FROM information_schema.tables  WHERE  table_name = 'song');"
+    cursor.execute(sql_query)
+    record = cursor.fetchone()
+
+    if record[0] == False : create_tables(cursor,db_conn)
 
     hot100 = os.path.join("data", "HotStuff.csv")
 
@@ -223,8 +227,12 @@ def get_top100_sql_performer(performer= '*'):
     cursor2 = db_conn2.cursor()
     
     try:
-        record = []
-        if notable : return jsonify(record)
+        sql_query = "SELECT EXISTS(SELECT *  FROM information_schema.tables  WHERE  table_name = 'song');"
+        cursor2.execute(sql_query)
+        record = cursor2.fetchone()
+
+        if record[0] == False : create_tables(cursor,db_conn)
+
         if performer != '*':
             performer = check_string(performer)         # escape any single quote characters
             sql_query = "select id, name, top_position, instnce, weeksonchart from song where lower(performer) = lower('" + performer + "')"
@@ -262,7 +270,7 @@ def get_top100_sql_song(song = '*'):
 
     try:
         record = []
-        if notable : return jsonify(record)
+
         if song != '*':
             song = check_string(song)
             sql_query = "select name, performer, top_position, weeksonchart from song" 
@@ -335,7 +343,7 @@ def get_top100_sql_search(searchInput):
 
 
     record = []
-    if notable : return jsonify(record)
+
     if searchInput == '': return jsonify(record)
     print("have data: " + searchInput)
     sql_query_where = ''

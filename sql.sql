@@ -1,27 +1,81 @@
-CREATE TABLE song(
-id bigint primary key GENERATED ALWAYS AS IDENTITY ( INCREMENT 1 START 1 MINVALUE 1 MAXVALUE 1000000 CACHE 1 ),
-songid varchar(255) not null,
-name varchar(255) not null,
-performer varchar(255) not null,
-top_position int,
-instnce int,
-weeksonchart  int);
+-- Table: public.song
 
-CREATE TABLE weekly(
+-- DROP TABLE public.song;
 
-id bigint not null,
-weekid int not null,
-url varchar(255) not null,
-pos int not null,
-top_pos_wk int not null);
+CREATE TABLE public.song
+(
+    id bigint NOT NULL GENERATED ALWAYS AS IDENTITY ( INCREMENT 1 START 1 MINVALUE 1 MAXVALUE 1000000 CACHE 1 ),
+    songid character varying(255) COLLATE pg_catalog."default" NOT NULL,
+    name character varying(255) COLLATE pg_catalog."default" NOT NULL,
+    performer character varying(255) COLLATE pg_catalog."default" NOT NULL,
+    top_position integer,
+    instnce integer,
+    weeksonchart integer,
+    CONSTRAINT song_pkey PRIMARY KEY (id)
+)
 
-CREATE TABLE weeks(
-id bigint primary key GENERATED ALWAYS AS IDENTITY ( INCREMENT 1 START 1 MINVALUE 1 MAXVALUE 10000 CACHE 1 ),
-weekinfo varchar(255) not null)
+TABLESPACE pg_default;
 
+-- Index: Name_index
 
-INSERT INTO song  (songid, name, performer,top_position,instnce,weeksonchart) VALUES ('Poor Little FoolRicky Nelson','Poor Little Fool', 'Ricky Nelson', 1, 1, 1);
+-- DROP INDEX public."Name_index";
 
+CREATE INDEX "Name_index"
+    ON public.song USING btree
+    (name COLLATE pg_catalog."default" ASC NULLS LAST)
+    TABLESPACE pg_default;
+-- Index: perfor_index
 
-select id, top_position, weeksonchart from song where songid = 'Poor Little FoolRicky Nelson' and instnce = 1
-'http://www.billboard.com/charts/hot-100/1958-08-02', '8/2/1958', '1','Poor Little Fool', 'Ricky Nelson', 'Poor Little FoolRicky Nelson','1', '', '1'
+-- DROP INDEX public.perfor_index;
+
+CREATE INDEX perfor_index
+    ON public.song USING btree
+    (performer COLLATE pg_catalog."default" ASC NULLS LAST)
+    TABLESPACE pg_default;
+-- Index: songid_index
+
+-- DROP INDEX public.songid_index;
+
+CREATE INDEX songid_index
+    ON public.song USING btree
+    (songid COLLATE pg_catalog."default" ASC NULLS LAST)
+    TABLESPACE pg_default;
+-- Table: public.weekly
+
+-- DROP TABLE public.weekly;
+
+CREATE TABLE public.weekly
+(
+    id bigint NOT NULL,
+    weekid integer NOT NULL,
+    url character varying(255) COLLATE pg_catalog."default" NOT NULL,
+    pos integer NOT NULL,
+    top_pos_wk integer NOT NULL
+)
+
+TABLESPACE pg_default;
+
+-- Index: id_index
+
+-- DROP INDEX public.id_index;
+
+CREATE INDEX id_index
+    ON public.weekly USING btree
+    (id ASC NULLS LAST)
+    TABLESPACE pg_default;
+
+-- Table: public.weeks
+
+-- DROP TABLE public.weeks;
+
+CREATE TABLE public.weeks
+(
+    id bigint NOT NULL GENERATED ALWAYS AS IDENTITY ( INCREMENT 1 START 1 MINVALUE 1 MAXVALUE 10000 CACHE 1 ),
+    weekinfo character varying(255) COLLATE pg_catalog."default" NOT NULL,
+	weekdate date,
+	year int,
+    CONSTRAINT weeks_pkey PRIMARY KEY (id)
+)
+
+TABLESPACE pg_default;
+
