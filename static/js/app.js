@@ -3,7 +3,7 @@
 
 var songkey = [], sox, songselected = [];
 var perfkey = [], pex, perfselected = [];
-var weekkey = [], wex, weekselected = [];
+var yearkey = [], yex, yearselected = [];
 var peakkey = [], pox, peekselected = [];
 var itemselected = [];
 var local = ''
@@ -49,9 +49,9 @@ function generateDropDowns(data) {
     if (peakkey.indexOf(pox) === -1) {
       peakkey.push(pox);
     }
-    wex = (datarow[3]);
-    if (weekkey.indexOf(wex) === -1) {
-      weekkey.push(wex);
+    yex = (datarow[4]);
+    if (yearkey.indexOf(yex) === -1) {
+      yearkey.push(yex);
     }
   });
   perfkey.sort();
@@ -60,36 +60,34 @@ function generateDropDowns(data) {
   document.getElementById("songselect").innerHTML = generatetxt(songkey);
   peakkey.sort();
   document.getElementById("peakselect").innerHTML = generatetxt(peakkey);
-  weekkey.sort();
-  document.getElementById("weekselect").innerHTML = generatetxt(weekkey);
+  yearkey.sort();
+  document.getElementById("yearselect").innerHTML = generatetxt(yearkey);
 
 }
 
 
-// Function that builds the table with 7 inputs.  Table structure, the data, and 
-// a date to start.  It was extended to include multiple selections from City, state
-// to shape.  The data is optional.  If not provided it will be seen as undefined. 
-// If the user wants to start fresh than the date will be empty "".  If empty
-// or undefined than generate the full table.  If data is provided than only
-// provide those sightings identified by the items selected.
+// Function that builds the table with song information.
 
-function generateTable(table, performer = 'All', song = 'All', week = 'All', peakpos = 'All') {
+function generateTable(table, performer = 'All', song = 'All', year = 'All', peakpos = 'All') {
 
+  var first = false
 
-  if (song == 'All' && performer == 'All' && week == 'All' && peakpos == 'All') {
+  if (song == 'All' && performer == 'All' && year == 'All' && peakpos == 'All') {
     // Need to build query to gather information.
-    url = local + "/get_top100_sql/performer";
+    url = local + "/get_top100_sql/search/*";
+    first = true
   }
   else {
     // Need to build query to gather information.
 
-    songParms = "name=" + song + "/performer=" + performer + "/week_info=" + week + "/top_position=" + peakpos
+    songParms = "name=" + song + "/performer=" + performer + "/chartyear=" + year + "/top_position=" + peakpos
     url = local + "/get_top100_sql/search/" + songParms;
+
   }
 
-  d3.json(url, function (data) {
+  d3.json(url).then(function(data) {
     console.log(data);
-    generateDropDowns(data);
+    if (first == true) {generateDropDowns(data);}
     var x = 0;
     for (let element of data) {
       if (x >= 200) { break; }
@@ -149,32 +147,16 @@ function checkinput() {
 
   var performerselected = document.getElementById("performerselect").value;
   var songselected = document.getElementById("songselect").value;
-  var weekselected = document.getElementById("weekselect").value;
+  var yearselected = document.getElementById("yearselect").value;
   var peakselected = document.getElementById("peakselect").value;
 
   var table_size = document.getElementById("song-table").rows.length;
-  console.log("Button Hit", performerselected, songselected, weekselected, peakselected, table_size)
-  // determine selection. call a simple function to return the items selected.
-  // store those items in the identified arrays.
-  // cityselected = itemsselected(city);
-
-  // stateselected = itemsselected(state);
-
-  // shapeselected = itemsselected(shape);
-
+  console.log("Button Hit", performerselected, songselected, yearselected, peakselected, table_size)
 
   // clear the table and then check for the right date range.
   clearTable(table, table_size);
-  // If in the right date range provde the results otherwise provde an alert
-  // and refresh with a full table.
-  /* if (date >= '1/1/2010' && date <='1/13/2010' || date == "") {
-      */
-  generateTable(table, performerselected, songselected, weekselected, peakselected);
-  // }
-  // else {
+ 
+  generateTable(table, performerselected, songselected, yearselected, peakselected);
 
-  //     alert("Please enter a date between 1/1/2010 and 1/13/2010!");
-  //     generateTable(table, tableData);
-  // }
 }
 

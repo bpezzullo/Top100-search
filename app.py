@@ -15,7 +15,7 @@ import datetime
 
 
 #----- Import API key ---------------
-# from config import username, password, dbname, USERNAME, PASSWORD
+# from config import USERNAME, PASSWORD
 
 DATABASE_URL = os.environ['DATABASE_URL']
 
@@ -42,8 +42,11 @@ local = False
 #         self.instance = songArray[6]
 #         self.weeksonChart = songArray[-1]
 def create_tables(cursor, db_conn):
-    sql_query = 'CREATE TABLE song (id bigint NOT NULL GENERATED ALWAYS AS IDENTITY ( INCREMENT 1 START 1 MINVALUE 1 MAXVALUE 1000000 CACHE 1 ),songid character varying(255) COLLATE pg_catalog."default" NOT NULL,name character varying(255) COLLATE pg_catalog."default" NOT NULL,performer character varying(255) COLLATE pg_catalog."default" NOT NULL,top_position integer,instnce integer,weeksonchart integer,CONSTRAINT song_pkey PRIMARY KEY (id))'
+    print("creating tables")
+    sql_query = 'CREATE TABLE song (id bigint NOT NULL GENERATED ALWAYS AS IDENTITY ( INCREMENT 1 START 1 MINVALUE 1 MAXVALUE 1000000 CACHE 1 ),songid character varying(255) COLLATE pg_catalog."default" NOT NULL,name character varying(255) COLLATE pg_catalog."default" NOT NULL,performer character varying(255) COLLATE pg_catalog."default" NOT NULL,top_position integer,instnce integer,weeksonchart integer, chartyear integer,CONSTRAINT song_pkey PRIMARY KEY (id))'
     cursor.execute(sql_query)
+
+    print("first table created")
     sql_query = 'CREATE INDEX "Name_index" ON song USING btree (name COLLATE pg_catalog."default" ASC NULLS LAST);' 
     cursor.execute(sql_query)
     
@@ -73,9 +76,11 @@ def filterLetters(letter):
     return (letter in letters)    
 
 # Database connection setup for local system
-t_host = "localhost"
+# t_host = "localhost"
+t_host = "mypostgreedb.cz5fmg4ysbf1.us-east-1.rds.amazonaws.com"
 t_port = "5432"
-t_dbname = "top100"
+# t_dbname = "top100"
+t_dbname = "Top100search"
 
 @app.route('/', methods=["GET", "POST"])
 @app.route("/home")
@@ -97,7 +102,7 @@ wocIn = 9           # weeks on chart index
 
 
 # call the API to load the top 100 file and store into SQL DB if not there.
-@app.route("/reload_top100_sql", methods=["GET"])
+@app.route("/reload_top100_sql", methods=["GET","PUT"])
 @cross_origin()
 def reload_top100_sql():
     # access the top 100 collection
@@ -132,15 +137,15 @@ def reload_top100_sql():
             try:
                 
                 id = 0
-                sql_query = """select id, top_position, weeksonchart from song where songid = %s and instnce = %s """
+                sql_query = """select id, top_position, weeksonchart, chartyear from song where songid = %s and instnce = %s """
 
                 cursor.execute(sql_query,(lines[sidIn],int(lines[iIn])))
 
                 record = cursor.fetchone()
 
                 if record == None:
-                    postgres_insert_query = """ INSERT INTO song (songid, name, performer,top_position,instnce,weeksonchart) VALUES (%s,%s,%s,%s,%s,%s)"""
-                    record_to_insert = (lines[sidIn], lines[sIn], lines[pIn],int(lines[ppIn]),int(lines[iIn]),int(lines[wocIn]))
+                    postgres_insert_query = """ INSERT INTO song (songid, name, performer,top_position,instnce,weeksonchart, chartyear) VALUES (%s,%s,%s,%s,%s,%s, %s)"""
+                    record_to_insert = (lines[sidIn], lines[sIn], lines[pIn],int(lines[ppIn]),int(lines[iIn]),int(lines[wocIn]),year)
                     cursor.execute(postgres_insert_query, record_to_insert)
 
                     # need to retrieve the id
@@ -154,16 +159,23 @@ def reload_top100_sql():
                     id = record[0]
                     top_position = record[1]
                     weeksonchart = record[2]
-                    if top_position > int(lines[ppIn]): 
+                    chartyear = record[3]
+
+                    if top_position > int(lines[ppIn]):     # save the top position of the somg in the main record
                         top_position = int(lines[ppIn])
                         updated = True
-                    if weeksonchart < int(lines[wocIn]): 
+                    if weeksonchart < int(lines[wocIn]):    # save the highest number of weeks on the chart
                         weeksonchart = int(lines[wocIn])
                         updated = True
+                    if chartyear > year:            # save the first year that the song hit the charts
+                        chartyear = year
+                        updated = True
+                        
 
                     if updated:
-                        sql_update_query = """UPDATE song set top_position = %s, weeksonchart = %s where id = %s"""
-                        cursor.execute(sql_update_query,(top_position,weeksonchart,id))
+                        sql_update_query = """UPDATE song set top_position = %s, weeksonchart = %s, chartyear = %s where id = %s"""
+                        cursor.execute(sql_update_query,(top_position,weeksonchart,chartyear,id))
+
                         # db_conn.commit()  # move commit to after everything is updated
 
                 # write to other tables
@@ -227,15 +239,17 @@ def get_top100_sql_performer(performer= '*'):
     cursor2 = db_conn2.cursor()
     
     try:
+        # check to see if the database and song table exists
         sql_query = "SELECT EXISTS(SELECT *  FROM information_schema.tables  WHERE  table_name = 'song');"
         cursor2.execute(sql_query)
         record = cursor2.fetchone()
+        # return empty record 
+        if record[0] == False : return jsonify(record)
 
-        if record[0] == False : create_tables(cursor,db_conn)
-
+        # Check to see what type of request is being asked.
         if performer != '*':
             performer = check_string(performer)         # escape any single quote characters
-            sql_query = "select id, name, top_position, instnce, weeksonchart from song where lower(performer) = lower('" + performer + "')"
+            sql_query = "select name, performer, top_position, chartyear, weeksonchart from song where lower(performer) = lower('" + performer + "')"
         else:
             sql_query = "select distinct name, performer, top_position, weeksonchart from song "
             
@@ -276,7 +290,8 @@ def get_top100_sql_song(song = '*'):
             sql_query = "select name, performer, top_position, weeksonchart from song" 
             sql_query += "  where lower(name) = lower('" + song + "')"
         else:
-            sql_query= "select distinct name from song"
+            sql_query= "select distinct name, performer, top_position from song"
+
         cursor2.execute(sql_query)
         record = cursor2.fetchall()
 
@@ -316,10 +331,12 @@ def get_top100_sql_song_details(song):
 
     try:
         song = check_string(song)   # need to add a single quote where necessary for query
-        sql_query = "select s.id, name, performer, wk.weekinfo, w.pos, w.top_pos_wk, s.top_position, instnce, weeksonchart from song as s" 
+        sql_query = "select s.id, name, performer, wk.weekinfo, w.pos, w.top_pos_wk, s.top_position, chartyear, instnce, weeksonchart, EXTRACT(WEEK FROM wk.weekdate),EXTRACT(ISOYEAR FROM wk.weekdate) from song as s" 
         sql_query += " inner join weekly w on s.id = w.id " 
         sql_query += " inner join weeks wk on w.weekid = wk.id where lower(name) = lower('" + song + "')"
-                    
+        
+        sql_query +=  " order by wk.weekdate asc "
+        
         cursor2.execute(sql_query)
         record = cursor2.fetchall()
 
@@ -337,9 +354,74 @@ def get_top100_sql_song_details(song):
     return jsonify(record)
 
 # get the songs for a performer from SQL DB
+@app.route("/get_top100_sql/search/",  methods=["GET"])
 @app.route("/get_top100_sql/search/<path:searchInput>",  methods=["GET"])
 @cross_origin()
-def get_top100_sql_search(searchInput):
+def get_top100_sql_search(searchInput = '*'):
+
+    record = []
+
+    if local :
+        db_conn2 = psycopg2.connect(host=t_host, port=t_port, dbname=t_dbname, user=USERNAME, password=PASSWORD)
+    else: 
+        db_conn2 = psycopg2.connect(DATABASE_URL, sslmode='require')
+    cursor2 = db_conn2.cursor()
+
+
+    # check to see if the database and song table exists
+    sql_query = "SELECT EXISTS(SELECT *  FROM information_schema.tables  WHERE  table_name = 'song');"
+    cursor2.execute(sql_query)
+    record = cursor2.fetchone()
+    # return empty record 
+    if record[0] == False : return jsonify(record)
+
+    if searchInput != '*':
+        # print("have data: " + searchInput)
+        sql_query_where = ''
+        result = searchInput.split('/')
+        index = 0
+        for res in result:
+            srchkey=res.split('=')
+            lower = ''
+            lower2 = ''
+            if (srchkey[0] == 'name') or (srchkey[0] == 'performer'): 
+                lower = "lower("
+                lower2 = ") "
+
+            if srchkey[1] != 'All': sql_query_where += "and " + lower + srchkey[0] + lower2 + " = " + lower + "'" + check_string(srchkey[1]) + "'" + lower2
+            index += 1
+    else:  # return all songs
+        sql_query_where = ''
+    # access top 100 collection
+
+    sql_order = " order by chartyear desc , name "
+    
+    try:
+        
+        sql_query = "select name, performer, s.top_position, chartyear, weeksonchart  from song as s " 
+        if len(sql_query_where) != 0: sql_query += 'where 1=1 ' + sql_query_where
+        sql_query += sql_order
+        print(sql_query)  
+        cursor2.execute(sql_query)
+        record = cursor2.fetchall()
+
+
+    except Exception:
+        exc_type, exc_tb = sys.exc_info()
+        fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
+        print(exc_type, fname, exc_tb.tb_lineno)
+        print("error occurred", sys.exc_info()[1])
+
+    finally:
+        cursor2.close()
+        db_conn2.close()
+
+    return jsonify(record)
+
+# get the songs for a performer from SQL DB
+@app.route("/get_top100_sql/search_details/<path:searchInput>",  methods=["GET"])
+@cross_origin()
+def get_top100_sql_search_details(searchInput):
 
 
     record = []
@@ -370,7 +452,7 @@ def get_top100_sql_search(searchInput):
     
     try:
         
-        sql_query = "select name, performer, s.top_position, weeksonchart, wk.weekinfo, w.pos  from song as s" 
+        sql_query = "select name, performer, s.top_position, weeksonchart, wk.weekinfo, w.pos,  wk.weekdate from song as s" 
         sql_query += " inner join weekly w on s.id = w.id " 
         sql_query += " inner join weeks wk on w.weekid = wk.id "
         if len(sql_query_where) != 0: sql_query += 'where 1=1 ' + sql_query_where

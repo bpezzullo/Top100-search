@@ -20,14 +20,14 @@
               <a class="navbar-brand" href="index.html">Top 100 Songs</a>
               <a class="nav-item nav-link active" href="graph.html">Graph a song</a>
               <a class="nav-item nav-link active" href="spot.html">Spotify information</a>
-              <a class="nav-item nav-link active" href="/reload_top100_sql">Repull information</a>
+              <a class="nav-item nav-link active" href="http://127.0.0.1:5000/reload_top100_sql">Repull information</a>
             </div>
           </div>
         </div>
       </div>
     </nav>
     <div class="hero text-center">
-      <h1>Top 100 songs from 1958 to 2018</h1>
+      <h1>Top 100 songs from 1958 to 2019</h1>
     </div>
     <div class="container-fluid">
       <div class="row margin-top-50"> 
@@ -43,28 +43,28 @@
                   <div class="form-group">
                     <ul class="list-group" id="filters">
                       <li class="filter list-group-item">
-                        <label for="date">Click on a song Title</label>
+                        <label for="date">Select a song Title</label>
                         <select  class="form-control" id="songselect" type="text">
                         </select>
                       </li>
                       <li class="filter list-group-item">
-                        <label for="date">Click on a performer</label>
+                        <label for="date">Select a performer</label>
                         <select  class="form-control" id="performerselect" type="text" >
                         </select>
                       </li>
                       <li class="filter list-group-item">
-                        <label for="date">Click on the peak position</label>
+                        <label for="date">Select a peak position</label>
                         <select class="form-control" id="peakselect" type="text" placeholder="All">
                         </select>
                       </li>
                       <li class="filter list-group-item">
-                        <label for="shape">Click on a year</label>
-                        <select  class="form-control" id="weekselect" type="text">
+                        <label for="shape">Select a year</label>
+                        <select  class="form-control" id="yearselect" type="text">
                         </select>
                       </li>
                     </ul>
                   </div>
-                  <button id="filter-btn" type="button" class="btn btn-default" onclick='javascript:checkinput()' value='select multiple'>Filter Table</button>
+                  <button id="filter-btn" type="button" class="btn btn-default" onclick='javascript:checkinput()' value='select multiple'>Filter Songs</button>
                 </form>
               </div>
             </div>
@@ -78,9 +78,8 @@
                   <th class="table-head">Song Name</th>
                   <th class="table-head">Performer</th>
                   <th class="table-head">Peak Position</th>
+                  <th class="table-head">Year</th>
                   <th class="table-head">Number of Weeks on chart</th>
-                  <th class="table-head">Week</th>
-                  <th class="table-head">Week position</th>
                 </tr>
               </thead>
               <tbody>
@@ -95,7 +94,9 @@
       <span class="bottom">Top 100 Songs</span>
     </footer>
   </div>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/4.11.0/d3.js"></script>
+  <!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/4.11.0/d3.js"></script>
+   -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/5.9.7/d3.js"></script>
   <script src="js/app.js"></script>
 </body>
 
