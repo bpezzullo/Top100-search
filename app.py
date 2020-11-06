@@ -1,5 +1,4 @@
 from flask import Flask, render_template, Response, jsonify
-from bson import json_util
 from flask_cors import CORS, cross_origin
 import psycopg2
 import requests
