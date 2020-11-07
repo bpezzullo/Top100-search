@@ -42,7 +42,7 @@ local = False
 #         self.weeksonChart = songArray[-1]
 def create_tables(cursor, db_conn):
     print("creating tables")
-    sql_query = 'CREATE TABLE song (id bigint NOT NULL GENERATED ALWAYS AS IDENTITY ( INCREMENT 1 START 1 MINVALUE 1 MAXVALUE 1000000 CACHE 1 ),songid character varying(255) COLLATE pg_catalog."default" NOT NULL,name character varying(255) COLLATE pg_catalog."default" NOT NULL,performer character varying(255) COLLATE pg_catalog."default" NOT NULL,top_position integer,instnce integer,weeksonchart integer, chartyear integer,CONSTRAINT song_pkey PRIMARY KEY (id))'
+    sql_query = 'CREATE TABLE song (id bigint NOT NULL GENERATED ALWAYS AS IDENTITY ( INCREMENT 1 START 1 MINVALUE 1 MAXVALUE 1000000 CACHE 1 ),songid character varying(255) COLLATE pg_catalog."default" NOT NULL,name character varying(255) COLLATE pg_catalog."default" NOT NULL,performer character varying(255) COLLATE pg_catalog."default" NOT NULL,top_position integer,instnce integer,weeksonchart integer, chartyear integer,CONSTRAINT song_pkey PRIMARY KEY (id));'
     cursor.execute(sql_query)
 
     print("first table created")
@@ -75,11 +75,11 @@ def filterLetters(letter):
     return (letter in letters)    
 
 # Database connection setup for local system
-# t_host = "localhost"
-t_host = "mypostgreedb.cz5fmg4ysbf1.us-east-1.rds.amazonaws.com"
+t_host = "localhost"
+# t_host = "mypostgreedb.cz5fmg4ysbf1.us-east-1.rds.amazonaws.com"
 t_port = "5432"
 # t_dbname = "top100"
-t_dbname = "Top100search"
+t_dbname = "Top100search" 
 
 @app.route('/', methods=["GET", "POST"])
 @app.route("/home")
