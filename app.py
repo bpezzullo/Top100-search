@@ -1,5 +1,6 @@
 from flask import Flask, render_template, Response, jsonify
 from flask_cors import CORS, cross_origin
+from pubsub import pub
 import psycopg2
 import requests
 import json
@@ -7,6 +8,7 @@ import csv
 import os
 import sys
 import datetime
+import re
 
 # import spotipy
 # import spotipy.util as util
@@ -32,60 +34,7 @@ app.debug = True
 global local
 local = False
 
-  
-# class Songs:
-#     def __init__(self,songArray):
-#         self.songName = songArray[3]
-#         self.performer = songArray[4]
-#         self.songID = songArray[5]
-#         self.instance = songArray[6]
-#         self.weeksonChart = songArray[-1]
-def create_tables(cursor, db_conn):
-    print("creating tables")
-    sql_query = 'CREATE TABLE song (id bigint NOT NULL GENERATED ALWAYS AS IDENTITY ( INCREMENT 1 START 1 MINVALUE 1 MAXVALUE 1000000 CACHE 1 ),songid character varying(255) COLLATE pg_catalog."default" NOT NULL,name character varying(255) COLLATE pg_catalog."default" NOT NULL,performer character varying(255) COLLATE pg_catalog."default" NOT NULL,top_position integer,instnce integer,weeksonchart integer, chartyear integer,CONSTRAINT song_pkey PRIMARY KEY (id));'
-    cursor.execute(sql_query)
-
-    print("first table created")
-    sql_query = 'CREATE INDEX "Name_index" ON song USING btree (name COLLATE pg_catalog."default" ASC NULLS LAST);' 
-    cursor.execute(sql_query)
-    
-    sql_query = 'CREATE INDEX perfor_index ON song USING btree (performer COLLATE pg_catalog."default" ASC NULLS LAST);' 
-    cursor.execute(sql_query)
-
-    sql_query = 'CREATE INDEX songid_index ON song USING btree (songid COLLATE pg_catalog."default" ASC NULLS LAST);' 
-    cursor.execute(sql_query)
-
-    sql_query = 'CREATE TABLE weekly (id bigint NOT NULL, weekid integer NOT NULL, url character varying(255) COLLATE pg_catalog."default" NOT NULL, pos integer NOT NULL, top_pos_wk integer NOT NULL);' 
-    cursor.execute(sql_query)
-
-    sql_query = 'CREATE INDEX id_index ON weekly USING btree (id ASC NULLS LAST);' 
-    cursor.execute(sql_query)
-
-    sql_query = 'CREATE TABLE weeks (id bigint NOT NULL GENERATED ALWAYS AS IDENTITY ( INCREMENT 1 START 1 MINVALUE 1 MAXVALUE 10000 CACHE 1 ), weekinfo character varying(255) COLLATE pg_catalog."default" NOT NULL,weekdate date,year int,CONSTRAINT weeks_pkey PRIMARY KEY (id));' 
-    cursor.execute(sql_query)
-
-    db_conn.commit()
-
-    return 
-
-
-#function that filters vowels
-def filterLetters(letter):
-    letters = ['a','b','c','d','e','f','g','h','i','j','k','l','m','n','o','p','q','r','s','t','u','v','w','x','y','z',',']
-    return (letter in letters)    
-
-# Database connection setup for local system
-t_host = "localhost"
-# t_host = "mypostgreedb.cz5fmg4ysbf1.us-east-1.rds.amazonaws.com"
-t_port = "5432"
-# t_dbname = "top100"
-t_dbname = "Top100search" 
-
-@app.route('/', methods=["GET", "POST"])
-@app.route("/home")
-def root():
-    # return render_template('index.html')
-    return app.send_static_file("index.html")
+test_running = False
 
 
 uIn = 0             # URL index
@@ -99,12 +48,67 @@ pwpIn = 7           # previous week position index
 ppIn = 8            # peak position at that time index
 wocIn = 9           # weeks on chart index
 
+# Database connection setup for local system
+t_host = "localhost"
+# t_host = "mypostgreedb.cz5fmg4ysbf1.us-east-1.rds.amazonaws.com"
+t_port = "5432"
+# t_dbname = "top100"
+t_dbname = "Top100search" 
 
-# call the API to load the top 100 file and store into SQL DB if not there.
-@app.route("/reload_top100_sql", methods=["GET","PUT"])
-@cross_origin()
-def reload_top100_sql():
-    # access the top 100 collection
+# ------------ create a listener ------------------
+
+def listener1(arg1, arg2=None):
+    print('Function listener1 received:')
+    print('  arg1 =', arg1)
+    load()
+
+# ------------ register listener ------------------
+
+pub.subscribe(listener1, 'load')
+
+  
+def create_tables(cursor, db_conn):
+    print("creating tables")
+    sql_query = 'CREATE TABLE song (id bigint NOT NULL GENERATED ALWAYS AS IDENTITY ( INCREMENT 1 START 1 MINVALUE 1 MAXVALUE 1000000 CACHE 1 ),songid character varying(255) COLLATE pg_catalog."default" NOT NULL,name character varying(255) COLLATE pg_catalog."default" NOT NULL,top_position integer,instnce integer,weeksonchart integer, chartyear integer,CONSTRAINT song_pkey PRIMARY KEY (id));'
+    cursor.execute(sql_query)
+
+    print("first table created")
+    sql_query = 'CREATE INDEX "Name_index" ON song USING btree (name COLLATE pg_catalog."default" ASC NULLS LAST);' 
+    cursor.execute(sql_query)
+    
+    sql_query = 'CREATE INDEX songid_index ON song USING btree (songid COLLATE pg_catalog."default" ASC NULLS LAST);' 
+    cursor.execute(sql_query)
+
+    sql_query = 'CREATE TABLE weekly (id bigint NOT NULL, weekid integer NOT NULL, url character varying(255) COLLATE pg_catalog."default" NOT NULL, pos integer NOT NULL, top_pos_wk integer NOT NULL);' 
+    cursor.execute(sql_query)
+
+    sql_query = 'CREATE INDEX id_index ON weekly USING btree (id ASC NULLS LAST);' 
+    cursor.execute(sql_query)
+
+    sql_query = 'CREATE TABLE weeks (id bigint NOT NULL GENERATED ALWAYS AS IDENTITY ( INCREMENT 1 START 1 MINVALUE 1 MAXVALUE 10000 CACHE 1 ), weekinfo character varying(255) COLLATE pg_catalog."default" NOT NULL,weekdate date,year int,CONSTRAINT weeks_pkey PRIMARY KEY (id));' 
+    cursor.execute(sql_query)
+
+    sql_query = 'CREATE TABLE performer (id bigint NOT NULL, performer character varying(255) NOT NULL);' 
+    cursor.execute(sql_query)
+
+    sql_query = 'CREATE INDEX perfor_index ON performer USING btree (performer ASC NULLS LAST);' 
+    cursor.execute(sql_query)
+
+    db_conn.commit()
+
+    return 
+
+
+# load the tables
+def load():
+
+    global test_running
+    print("before",test_running)
+    if test_running: return
+
+    test_running = True
+
+    print("AFTER",test_running)
 
     if local :db_conn = psycopg2.connect(host=t_host, port=t_port, dbname=t_dbname, user=USERNAME, password=PASSWORD)
     else: 
@@ -128,14 +132,24 @@ def reload_top100_sql():
         counter = 0
         for lines in csvFile:
 
+            # remove slashes from song and songid
+            lines[sIn] = re.sub("/", "-", lines[sIn])
+
+            lines[sidIn] = re.sub("/", "-", lines[sidIn])
+
+            lines[sIn] = re.sub("'", "", lines[sIn])
+
+            lines[sidIn] = re.sub("'", "", lines[sidIn])
+
             weekid = datetime.datetime.strptime(str(lines[wIn]), '%m/%d/%Y')
             year = weekid.year
 
-            if year < 2019 : continue   # ignore the old records for now.
+            if year > 2000 : continue   # ignore the new records for now.
 
             try:
-                
+
                 id = 0
+
                 sql_query = """select id, top_position, weeksonchart, chartyear from song where songid = %s and instnce = %s """
 
                 cursor.execute(sql_query,(lines[sidIn],int(lines[iIn])))
@@ -143,8 +157,8 @@ def reload_top100_sql():
                 record = cursor.fetchone()
 
                 if record == None:
-                    postgres_insert_query = """ INSERT INTO song (songid, name, performer,top_position,instnce,weeksonchart, chartyear) VALUES (%s,%s,%s,%s,%s,%s, %s)"""
-                    record_to_insert = (lines[sidIn], lines[sIn], lines[pIn],int(lines[ppIn]),int(lines[iIn]),int(lines[wocIn]),year)
+                    postgres_insert_query = """ INSERT INTO song (songid, name,top_position,instnce,weeksonchart, chartyear) VALUES (%s,%s,%s,%s,%s,%s)"""
+                    record_to_insert = (lines[sidIn], lines[sIn],int(lines[ppIn]),int(lines[iIn]),int(lines[wocIn]),year)
                     cursor.execute(postgres_insert_query, record_to_insert)
 
                     # need to retrieve the id
@@ -160,7 +174,7 @@ def reload_top100_sql():
                     weeksonchart = record[2]
                     chartyear = record[3]
 
-                    if top_position > int(lines[ppIn]):     # save the top position of the somg in the main record
+                    if top_position > int(lines[ppIn]):     # save the top position of the song in the main record
                         top_position = int(lines[ppIn])
                         updated = True
                     if weeksonchart < int(lines[wocIn]):    # save the highest number of weeks on the chart
@@ -169,13 +183,11 @@ def reload_top100_sql():
                     if chartyear > year:            # save the first year that the song hit the charts
                         chartyear = year
                         updated = True
-                        
 
+                    # update the record if a change is made
                     if updated:
                         sql_update_query = """UPDATE song set top_position = %s, weeksonchart = %s, chartyear = %s where id = %s"""
                         cursor.execute(sql_update_query,(top_position,weeksonchart,chartyear,id))
-
-                        # db_conn.commit()  # move commit to after everything is updated
 
                 # write to other tables
 
@@ -206,20 +218,74 @@ def reload_top100_sql():
                     record_to_insert = (id, weekid, lines[uIn],int(lines[wpIn]),int(lines[ppIn]))
                     cursor.execute(postgres_insert_query, record_to_insert)
 
+                # find out if more than one performer for the song.  If so than split the performers out
+
+                performer = lines[pIn]
+                x = performer.count('/')
+
+                if (( x < 1) or (x > 2)):
+                    mperf = [re.sub("/", "-", performer)]
+                else:
+                    mperf = performer.split('/')
+
+                for performer in mperf:
+
+                    # remove single quotes
+                    performer = re.sub("'", "", performer)
+                    # write to performer tables
+
+                    sql_query = "select id from performer where performer = '" + performer + "' and id = " + str(id)
+
+                    cursor.execute(sql_query)
+                    record = cursor.fetchone()
+                    if record == None:
+
+                        postgres_insert_query = "INSERT INTO performer (id, performer) VALUES ('" + str(id) + "', '" + performer + "')"
+                        cursor.execute(postgres_insert_query)
+
             except Exception:
                 exc_type, exc_tb = sys.exc_info()
                 fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
                 print(exc_type, fname, exc_tb.tb_lineno)
                 print("error occurred", sys.exc_info()[1])
-                cursor.close()
-                db_conn.close()
                 break
 
             else:
                 db_conn.commit()
                 counter += 1
                 if counter % 10000 == 0: print("next record",counter)
+        
                 # if counter > 200: break
+
+        cursor.close()
+        db_conn.close()
+    return
+
+
+#function that filters vowels
+def filterLetters(letter):
+    letters = ['a','b','c','d','e','f','g','h','i','j','k','l','m','n','o','p','q','r','s','t','u','v','w','x','y','z',',']
+    return (letter in letters)    
+
+
+@app.route('/', methods=["GET", "POST"])
+@app.route("/home")
+def root():
+    # return render_template('index.html')
+    return app.send_static_file("index.html")
+
+
+
+
+# call the API to load the top 100 file and store into SQL DB if not there.
+@app.route("/reload_top100_sql", methods=["GET","PUT"])
+@cross_origin()
+def reload_top100_sql():
+    # access the top 100 collection
+
+    print('Publish something via pubsub')
+
+    pub.sendMessage('load', arg1=123)
 
     return root()
 
@@ -248,9 +314,9 @@ def get_top100_sql_performer(performer= '*'):
         # Check to see what type of request is being asked.
         if performer != '*':
             performer = check_string(performer)         # escape any single quote characters
-            sql_query = "select name, performer, top_position, chartyear, weeksonchart from song where lower(performer) = lower('" + performer + "')"
+            sql_query = "select name, performer, top_position, chartyear, weeksonchart from song as s inner join performer as p on s.id = p.id where lower(performer) = lower('" + performer + "')"
         else:
-            sql_query = "select distinct name, performer, top_position, weeksonchart from song "
+            sql_query = "select distinct name, performer, top_position, weeksonchart from song as s inner join performer as p on s.id = p.id "
             
         cursor2.execute(sql_query)
         record = cursor2.fetchall()
@@ -286,10 +352,10 @@ def get_top100_sql_song(song = '*'):
 
         if song != '*':
             song = check_string(song)
-            sql_query = "select name, performer, top_position, weeksonchart from song" 
+            sql_query = "select name, performer, top_position, weeksonchart from song as s inner join performer as p on s.id = p.id " 
             sql_query += "  where lower(name) = lower('" + song + "')"
         else:
-            sql_query= "select distinct name, performer, top_position from song"
+            sql_query= "select distinct name, performer, top_position, chartyear from song as s inner join performer as p on s.id = p.id "
 
         cursor2.execute(sql_query)
         record = cursor2.fetchall()
@@ -331,6 +397,7 @@ def get_top100_sql_song_details(song):
     try:
         song = check_string(song)   # need to add a single quote where necessary for query
         sql_query = "select s.id, name, performer, wk.weekinfo, w.pos, w.top_pos_wk, s.top_position, chartyear, instnce, weeksonchart, EXTRACT(WEEK FROM wk.weekdate),EXTRACT(ISOYEAR FROM wk.weekdate) from song as s" 
+        sql_query += " inner join performer as p on s.id = p.id"
         sql_query += " inner join weekly w on s.id = w.id " 
         sql_query += " inner join weeks wk on w.weekid = wk.id where lower(name) = lower('" + song + "')"
         
@@ -397,7 +464,7 @@ def get_top100_sql_search(searchInput = '*'):
     
     try:
         
-        sql_query = "select name, performer, s.top_position, chartyear, weeksonchart  from song as s " 
+        sql_query = "select name, performer, s.top_position, chartyear, weeksonchart  from song as s inner join performer as p on s.id = p.id " 
         if len(sql_query_where) != 0: sql_query += 'where 1=1 ' + sql_query_where
         sql_query += sql_order
         print(sql_query)  
@@ -434,7 +501,7 @@ def get_top100_sql_search_details(searchInput):
         srchkey=res.split('=')
         lower = ''
         lower2 = ''
-        if index <= 1: 
+        if (srchkey[0] == 'name') or (srchkey[0] == 'performer'): 
             lower = "lower("
             lower2 = ") "
 
@@ -452,6 +519,7 @@ def get_top100_sql_search_details(searchInput):
     try:
         
         sql_query = "select name, performer, s.top_position, weeksonchart, wk.weekinfo, w.pos,  wk.weekdate from song as s" 
+        sql_query = " inner join performer as p on s.id = p.id"
         sql_query += " inner join weekly w on s.id = w.id " 
         sql_query += " inner join weeks wk on w.weekid = wk.id "
         if len(sql_query_where) != 0: sql_query += 'where 1=1 ' + sql_query_where

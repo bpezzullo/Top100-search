@@ -4,6 +4,7 @@
 var songkey = [], sox, songselected = [];
 var perfkey = [], pex, perfselected = [];
 var peakkey = [], pox, peekselected = [];
+var yearkey = [], yex, yearselected = [];
 var years = [];
 
 var local = ''
@@ -58,19 +59,25 @@ d3.json(url).then(function (data) {
 
   data.forEach(datarow => {
 
-    sox = (datarow[0]);
+    sox = (datarow[0]);             // song names
     if (songkey.indexOf(sox) === -1) {
       songkey.push(sox);
     }
-    pox = (datarow[2]);
+    pox = (datarow[2]);              // peakposition
     if (peakkey.indexOf(pox) === -1) {
       peakkey.push(pox);
     }
 
-    pex = (datarow[1]);
+    pex = (datarow[1]);               // performers
     if (perfkey.indexOf(pex) === -1) {
       perfkey.push(pex);
     }
+
+    yex = (datarow[3]);               // year ran
+    if (yearkey.indexOf(yex) === -1) {
+      yearkey.push(yex);
+    }
+
 
   });
 
@@ -80,7 +87,10 @@ d3.json(url).then(function (data) {
   document.getElementById("performerselect").innerHTML = generatetxt(perfkey);
   peakkey.sort();
   document.getElementById("peakselect").innerHTML = generatetxt(peakkey);
+  yearkey.sort();
+  document.getElementById("yearselect").innerHTML = generatetxt(yearkey);
 
+  
 });
 
 /*------- End of Initialization -----*/
@@ -111,16 +121,18 @@ function multiGraph(songinfo) {
 
     var promiseText = [];
     console.log(songinfo)
-    songinfo.forEach(element => {promiseText.push(d3.json(local + "/get_top100_sql/song_details/" + element[0]))});
+    songinfo.forEach(element => {promiseText.push(d3.json(local + "/get_top100_sql/song_details/name=" + element[0]))});
 
     // Go gather the information.
     mySongPromises = Promise.all(promiseText);
 
     // Once all the data has been retrieved kick off the processing below
     mySongPromises.then(function(songdinfo) {
-      songdinfo.forEach(element => {       // Capture the number of weeks for the song being on the charts and save it for the graph
-        lineData.push(buildJS(element));
-        songList.push(element[0][1]);
+      songdinfo.forEach(elem => {       // Capture the number of weeks for the song being on the charts and save it for the graph
+        console.log(elem);
+        lineData.push(buildJS(elem
+          ));
+        songList.push(elem[0][1]);
       });
       console.log("1", songList);
 
@@ -199,15 +211,15 @@ function generateMultiGraph(performer) {
 
 /* create a linegraph for each song from the performer */
 
-function generatePosGraph(position) {
+function generatePosGraph(position, year) {
 
   // clear out chart
   while (myLineChart.data.datasets.length > 0) {
     myLineChart.data.datasets.pop()
   }
 
-  url = local + "/get_top100_sql/search/" + "top_position=" + position;
-
+  url = local + "/get_top100_sql/search/" + "top_position=" + position + "/chartyear=" + year;
+  console.log(url)
   // pull the songs associated with the performer
   d3.json(url).then(function(songinfo) {
 
@@ -289,6 +301,7 @@ function checkinput() {
   var songselected = document.getElementById("songselect").value;
   var performerselected = document.getElementById("performerselect").value;
   var positionselected = document.getElementById("peakselect").value;
+  var yearselected = document.getElementById("yearselect").value;
 
   console.log("Button Hit", songselected, performerselected);
 
@@ -300,7 +313,10 @@ function checkinput() {
       generateMultiGraph(performerselected);
     }
     else {
-     generatePosGraph(positionselected);
+      console.log(positionselected, yearselected)
+      if (positionselected != 'Select Item' && yearselected != 'Select Item')
+     generatePosGraph(positionselected,yearselected);
+
     }
   }
 }
