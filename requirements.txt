@@ -8,3 +8,4 @@ dnspython
 pandas
 numpy
 datetime
+pubsub
