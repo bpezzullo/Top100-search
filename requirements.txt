@@ -1,6 +1,5 @@
 flask
-pub
-pubsub
+pypubsub
 gunicorn
 whitenoise
 flask_cors
