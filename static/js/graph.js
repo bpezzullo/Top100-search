@@ -121,13 +121,14 @@ function multiGraph(songinfo) {
 
     var promiseText = [];
     console.log(songinfo)
-    songinfo.forEach(element => {promiseText.push(d3.json(local + "/get_top100_sql/song_details/name=" + element[0]))});
+    songinfo.forEach(element => {promiseText.push(d3.json(local + "/get_top100_sql/song_details/" + element[0]))});
 
     // Go gather the information.
     mySongPromises = Promise.all(promiseText);
 
     // Once all the data has been retrieved kick off the processing below
     mySongPromises.then(function(songdinfo) {
+      console.log(songdinfo);
       songdinfo.forEach(elem => {       // Capture the number of weeks for the song being on the charts and save it for the graph
         console.log(elem);
         lineData.push(buildJS(elem
