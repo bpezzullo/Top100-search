@@ -1,4 +1,6 @@
 flask
+pub
+pubsub
 gunicorn
 whitenoise
 flask_cors
@@ -8,4 +10,3 @@ dnspython
 pandas
 numpy
 datetime
-pubsub
