@@ -31,7 +31,7 @@ function generateDropDowns(data) {
   // loop through the data to find the information needed for the drop down lists for city
   // state, country and shape
 
-
+  // console.log(data)
   data.forEach(datarow => {
     // get the value of the first key "city" and then check to see if the city from the
     // datarow has already been captured by checking to see if it is in the citykey array.
@@ -49,7 +49,7 @@ function generateDropDowns(data) {
     if (peakkey.indexOf(pox) === -1) {
       peakkey.push(pox);
     }
-    yex = (datarow[4]);
+    yex = (datarow[3]);
     if (yearkey.indexOf(yex) === -1) {
       yearkey.push(yex);
     }
@@ -86,7 +86,7 @@ function generateTable(table, performer = 'All', song = 'All', year = 'All', pea
   }
 
   d3.json(url).then(function(data) {
-    console.log(data);
+    // console.log(data);
     if (first == true) {generateDropDowns(data);}
     var x = 0;
     for (let element of data) {
@@ -151,7 +151,7 @@ function checkinput() {
   var peakselected = document.getElementById("peakselect").value;
 
   var table_size = document.getElementById("song-table").rows.length;
-  console.log("Button Hit", performerselected, songselected, yearselected, peakselected, table_size)
+  // console.log("Button Hit", performerselected, songselected, yearselected, peakselected, table_size)
 
   // clear the table and then check for the right date range.
   clearTable(table, table_size);

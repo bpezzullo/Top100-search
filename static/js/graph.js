@@ -51,7 +51,7 @@ Chart.defaults.line.spanGaps = false;
 url = local + "/get_top100_sql/song/*";
 
 d3.json(url).then(function (data) {
-  console.log(data);
+  // console.log(data);
 
   // loop through the data to find the information needed for the drop down lists for city
   // state, country and shape
@@ -120,7 +120,7 @@ function multiGraph(songinfo) {
                     };
 
     var promiseText = [];
-    console.log(songinfo)
+    // console.log(songinfo)
     songinfo.forEach(element => {promiseText.push(d3.json(local + "/get_top100_sql/song_details/" + element[0]))});
 
     // Go gather the information.
@@ -128,14 +128,13 @@ function multiGraph(songinfo) {
 
     // Once all the data has been retrieved kick off the processing below
     mySongPromises.then(function(songdinfo) {
-      console.log(songdinfo);
+
       songdinfo.forEach(elem => {       // Capture the number of weeks for the song being on the charts and save it for the graph
-        console.log(elem);
+        // console.log(elem);
         lineData.push(buildJS(elem
           ));
         songList.push(elem[0][1]);
       });
-      console.log("1", songList);
 
       //create the template to populate the Chartjs module
       for (var i=0;i < songList.length;i++) {
@@ -175,7 +174,6 @@ function multiGraph(songinfo) {
       
       });
 
-      console.log("in m graph2",myLineChart.data.datasets);
       myLineChart.data.labels = myLineData.labels;
       myLineChart.options.legend.display = true;
       myLineChart.update();
@@ -193,8 +191,7 @@ function generateMultiGraph(performer) {
   // clear out chart
   while (myLineChart.data.datasets.length > 0) {
     myLineChart.data.datasets.pop()
-    console.log("pop")
-    
+
   }
 
   url = local + "/get_top100_sql/performer/" + performer;
@@ -220,7 +217,6 @@ function generatePosGraph(position, year) {
   }
 
   url = local + "/get_top100_sql/search/" + "top_position=" + position + "/chartyear=" + year;
-  console.log(url)
   // pull the songs associated with the performer
   d3.json(url).then(function(songinfo) {
 
@@ -280,7 +276,7 @@ function generateGraph(song) {
 
     myLineChart.data.labels = Object.keys(lineData)
 
-    console.log("in Graph", myLineChart.data.labels)
+    // console.log("in Graph", myLineChart.data.labels)
 
     myLineChart.options.legend.display = true;
     myLineChart.update();
@@ -304,7 +300,7 @@ function checkinput() {
   var positionselected = document.getElementById("peakselect").value;
   var yearselected = document.getElementById("yearselect").value;
 
-  console.log("Button Hit", songselected, performerselected);
+  // console.log("Button Hit", songselected, performerselected);
 
   if (songselected != 'Select Item') {
     generateGraph(songselected);
@@ -314,7 +310,7 @@ function checkinput() {
       generateMultiGraph(performerselected);
     }
     else {
-      console.log(positionselected, yearselected)
+
       if (positionselected != 'Select Item' && yearselected != 'Select Item')
      generatePosGraph(positionselected,yearselected);
 
