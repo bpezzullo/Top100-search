@@ -1,7 +1,9 @@
-from flask import Flask, render_template, Response, jsonify
+from flask import Flask, render_template, Response, jsonify,redirect
 from flask_cors import CORS, cross_origin
 from pubsub import pub
 import psycopg2
+from _thread import start_new_thread
+import time
 import requests
 import json
 import csv 
@@ -9,6 +11,7 @@ import os
 import sys
 import datetime
 import re
+
 
 # import spotipy
 # import spotipy.util as util
@@ -30,7 +33,7 @@ app.config['CORS_HEADERS'] = 'Content-Type'
 app.config['CORS_ORIGINS'] = '*'
 
 # run in debug mode
-app.debug = True
+app.debug = False
 global local
 local = False
 
@@ -55,12 +58,25 @@ t_port = "5432"
 # t_dbname = "top100"
 t_dbname = "Top100search" 
 
+def test():
+    x=0
+    run = True
+    while run:
+
+        time.sleep(5)
+        x += 1
+        print("test")
+        if x >=5:
+            run = False
+
 # ------------ create a listener ------------------
 
 def listener1(arg1, arg2=None):
     print('Function listener1 received:')
     print('  arg1 =', arg1)
-    load()
+    start_new_thread ( load, ())
+    return
+
 
 # ------------ register listener ------------------
 
@@ -275,19 +291,17 @@ def root():
     return app.send_static_file("index.html")
 
 
-
-
 # call the API to load the top 100 file and store into SQL DB if not there.
 @app.route("/reload_top100_sql", methods=["GET","PUT"])
 @cross_origin()
 def reload_top100_sql():
     # access the top 100 collection
 
+    pub.sendMessage('load', arg1=123)
+    
     print('Publish something via pubsub')
 
-    pub.sendMessage('load', arg1=123)
-
-    return root()
+    return redirect('/')
 
 # get the songs for a performer from SQL DB
 @app.route("/get_top100_sql/performer",  methods=["GET"])
