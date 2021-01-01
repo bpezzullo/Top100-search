@@ -1,0 +1,72 @@
+{% extends "layout.html" %}
+{% block content %}
+
+  <div class="wrapper">
+    <nav class="navbar navbar-default">
+      <div class="container-fluid">
+        <div class="navbar-header">
+          <div class="collapse navbar-collapse" id="navbarNavAltMarkup">
+            <div class="navbar-nav">
+              <a class="nav-item nav-link active" href="/">Top 100 Songs</a>
+              <a class="nav-item nav-link active" href="/graph">Graph a song</a>
+              <a class="nav-item nav-link active" href="/spot2">Create Spotify Playlist</a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </nav>
+    <div class="hero text-center">
+      <h1>Graph your songs</h1>
+    </div>
+    <div class="container-fluid">
+      <div class="row">
+        <div class="col-md-2">
+          <aside class="filters">
+            <div class="panel panel-default">
+              <div class="panel-heading">Song Selection</div>
+              <div class="panel-body">
+                <form>
+                  <div class="form-group">
+                    <ul class="list-group" id="filters">
+                      <li class="filter list-group-item">
+                        <label for="title">Select a Song Title</label>
+                        <select  class="form-control" id="songselect" type="text">
+                        </select>
+                      </li>
+                      <li class="filter list-group-item">
+                        <label for="perf">Select a Performer</label>
+                        <select  class="form-control" id="performerselect" type="text" >
+                        </select>
+                      </li>
+                      <li class="filter list-group-item">
+                        <label for="pos">Select a Position</label>
+                        <select  class="form-control" id="peakselect" type="text" >
+                        </select>
+                      </li>
+                      <li class="filter list-group-item">
+                        <label for="date">Select a Year</label>
+                        <select  class="form-control" id="yearselect" type="text" >
+                        </select>
+                      </li>
+                    </ul>
+                  </div>
+                  <button id="filter-btn" type="button" class="btn btn-default" onclick='javascript:checkinput()' value='select multiple'>Graph Song</button>
+                </form>
+              </div>
+            </div>
+          </aside>
+        </div>
+        <div class="col-md-10">
+          <canvas id="graph-area">
+          </canvas>
+        </div>
+      </div>
+    </div>
+    {% endblock content %}
+
+  {% block content2 %}
+    <!-- ChartJS-->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@2.8.0"></script>
+
+    <script src="{{ url_for('static', filename='js/graph.js') }}"></script>
+  {% endblock content2 %}

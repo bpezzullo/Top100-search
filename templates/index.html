@@ -1,0 +1,87 @@
+{% extends "layout.html" %}
+{% block content %}
+
+  <div class="wrapper">
+    <nav class="navbar navbar-default">
+      <div class="container-fluid">
+        <div class="navbar-header">
+          <div class="collapse navbar-collapse" id="navbarNavAltMarkup">
+            <div class="navbar-nav">
+              <a class="nav-item nav-link active" href="/">Top 100 Songs</a>
+              <a class="nav-item nav-link active" href="/graph">Graph a song</a>
+              <a class="nav-item nav-link active" href="/spot2">Create Spotify Playlist</a>
+              <a class="nav-item nav-link active" href="/reload_top100_sql">Repull information</a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </nav>
+    <div class="hero text-center">
+      <h1>Top 100 songs from 1958 to 2000</h1>
+    </div>
+    <div class="container-fluid">
+      <div class="row">
+        <div class="col-md-2">
+          <aside class="filters">
+            <div class="panel panel-default">
+              <div class="panel-heading">Song Search</div>
+              <div class="panel-body">
+                <form>
+                  <div class="form-group">
+                    <ul class="list-group" id="filters">
+                      <li class="filter list-group-item">
+                        <label for="song">Select a song Title</label>
+                        <select  class="form-control" id="songselect" type="text">
+                        </select>
+                      </li>
+                      <li class="filter list-group-item">
+                        <label for="performer">Select a performer</label>
+                        <select  class="form-control" id="performerselect" type="text" >
+                        </select>
+                      </li>
+                      <li class="filter list-group-item">
+                        <label for="peak">Select a peak position</label>
+                        <select class="form-control" id="peakselect" type="text" placeholder="All">
+                        </select>
+                      </li>
+                      <li class="filter list-group-item">
+                        <label for="shape">Select a year</label>
+                        <select  class="form-control" id="yearselect" type="text">
+                        </select>
+                      </li>
+                    </ul>
+                  </div>
+                  <button id="filter-btn" type="button" class="btn btn-default" onclick='javascript:checkinput()' value='select multiple'>Search Songs</button>
+                  <hr>
+                  <input class="form-control" type='text' id = 'partial'  placeholder="Partial search"> 
+                  <button id="filter-btn" type="button" class="btn btn-default" onclick='javascript:partialInput()' >Search Partial</button>
+                </form>
+              </div>
+            </div>
+          </aside>
+        </div>
+        <div class="col-md-10">
+          <div id="table-area" class="table-class">
+            <table id="song-table" class="table table-striped">
+              <thead>
+                <tr>
+                  <th class="table-head">Song Name</th>
+                  <th class="table-head">Performer</th>
+                  <th class="table-head">Peak Position</th>
+                  <th class="table-head">Year</th>
+                  <th class="table-head">Number of Weeks on chart</th>
+                </tr>
+              </thead>
+              <tbody>
+
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+    {% endblock content %}
+
+  {% block content2 %}
+  <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+  {% endblock content2 %}

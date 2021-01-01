@@ -1,18 +1,6 @@
-<!DOCTYPE html>
-<html>
+{% extends "layout.html" %}
+{% block content %}
 
-<head>
-  <meta charset="utf-8">
-
-  <title>Top 100 music search</title>
- 
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootswatch/3.3.7/superhero/bootstrap.min.css">
-  <link href="https://fonts.googleapis.com/css?family=Ubuntu" rel="stylesheet">
-  <link rel="stylesheet" href="css/style.css">
-</head>
-
-<body>
   <div class="wrapper">
     <nav class="navbar navbar-default">
       <div class="container-fluid">
@@ -30,16 +18,13 @@
     <div class="hero text-center">
       <h1>Play your songs</h1>
     </div>
-
+    <h1>Spotify Web Playback SDK Quick Start Tutorial</h1>
+    <h2>Open your console log: <code>View > Developer > JavaScript Console</code></h2>
+  
 
     </div>
-    <footer class="footer">
-      <span class="bottom">Top 100 Songs</span>
-    </footer>
-  </div>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/5.9.7/d3.js"></script>
-  <script src="js/spot.js"></script>
-</body>
+    {% endblock content %}
 
-</html>
-
+  {% block content2 %}
+  <script src="{{ url_for('static', filename='js/spot.js') }}"></script>
+  {% endblock content2 %}

@@ -7,9 +7,6 @@ var peakkey = [], pox, peekselected = [];
 var yearkey = [], yex, yearselected = [];
 var years = [];
 
-var local = ''
-// local = 'http://127.0.0.1:5000'
-
 // fucntion to generate the text for the drop downs.
 
 function generatetxt(keylist) {
@@ -48,50 +45,50 @@ var myLineChart = new Chart(ctx, {
 });
 Chart.defaults.line.spanGaps = false;
 
-url = local + "/get_top100_sql/song/*";
 
-d3.json(url).then(function (data) {
-  // console.log(data);
+  url = local + "/get_top100_sql/song/*"
+  d3.json(url).then(function (data) {
 
-  // loop through the data to find the information needed for the drop down lists for city
-  // state, country and shape
+    data.forEach(datarow => {
+      sox = (datarow[0]);
+      if (songkey.indexOf(sox) === -1) {
+        songkey.push(sox);
+      }
+    });
 
-
-  data.forEach(datarow => {
-
-    sox = (datarow[0]);             // song names
-    if (songkey.indexOf(sox) === -1) {
-      songkey.push(sox);
-    }
-    pox = (datarow[2]);              // peakposition
-    if (peakkey.indexOf(pox) === -1) {
-      peakkey.push(pox);
-    }
-
-    pex = (datarow[1]);               // performers
-    if (perfkey.indexOf(pex) === -1) {
-      perfkey.push(pex);
-    }
-
-    yex = (datarow[3]);               // year ran
-    if (yearkey.indexOf(yex) === -1) {
-      yearkey.push(yex);
-    }
-
-
+    songkey.sort();
+    document.getElementById("songselect").innerHTML = generatetxt(songkey);
   });
 
-  songkey.sort();
-  document.getElementById("songselect").innerHTML = generatetxt(songkey);
-  perfkey.sort();
-  document.getElementById("performerselect").innerHTML = generatetxt(perfkey);
-  peakkey.sort();
-  document.getElementById("peakselect").innerHTML = generatetxt(peakkey);
-  yearkey.sort();
+  url = local + "/get_top100_sql/performer/*"
+  d3.json(url).then(function (data) {
+
+    data.forEach(datarow => {
+
+      pex = (datarow[0]);
+      if (perfkey.indexOf(pex) === -1) {
+        perfkey.push(pex);
+      }
+    });
+
+    perfkey.sort();
+    document.getElementById("performerselect").innerHTML = generatetxt(perfkey);
+  });
+
+
+  for (var i = 1958; i < 2001; i++) {
+    yearkey.push(i)
+  };
+
   document.getElementById("yearselect").innerHTML = generatetxt(yearkey);
 
-  
-});
+  for (var i = 1; i < 101; i++) {
+    peakkey.push(i)
+  };
+
+
+  document.getElementById("peakselect").innerHTML = generatetxt(peakkey);
+
 
 /*------- End of Initialization -----*/
 
@@ -284,14 +281,7 @@ function generateGraph(song) {
   });
 }
 
-// var songslct = document.getElementById("songselect")
-// // var songslct = d3.select(".songselect")
-// songslct.select(".songselect").on("change", function() {
-//   var songselected = document.getElementById("songselect").value;
-//   generateGraph(songselected);
-// }
-
-//
+// Gather input from user and assess songs to graph
 
 function checkinput() {
 
@@ -304,17 +294,28 @@ function checkinput() {
 
   if (songselected != 'Select Item') {
     generateGraph(songselected);
+    document.getElementById("performerselect").value = 'Select Item';
+    document.getElementById("peakselect").value = 'Select Item';
+    document.getElementById("yearselect").value = 'Select Item';
   }
   else {  
     if (performerselected != 'Select Item') {
       generateMultiGraph(performerselected);
+      document.getElementById("peakselect").value = 'Select Item';
+      document.getElementById("yearselect").value = 'Select Item';
     }
     else {
 
-      if (positionselected != 'Select Item' && yearselected != 'Select Item')
+      if (positionselected != 'Select Item' && yearselected != 'Select Item') {
      generatePosGraph(positionselected,yearselected);
+    }
+
+     else{
+      alert("Select a song, or a performer, or both a position and year");
+     }
 
     }
   }
+
 }
 

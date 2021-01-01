@@ -1,0 +1,73 @@
+{% extends "layout.html" %}
+{% block content %}
+
+<body>
+  <div class="wrapper">
+    <nav class="navbar navbar-default">
+      <div class="container-fluid">
+        <div class="navbar-header">
+          <div class="collapse navbar-collapse" id="navbarNavAltMarkup">
+            <div class="navbar-nav">
+              <a class="nav-item nav-link active" href="/">Top 100 Songs</a>
+              <a class="nav-item nav-link active" href="/graph">Graph a song</a>
+              <a class="nav-item nav-link active" href="/spot2">Create Spotify playlist</a>
+              <!-- <a class="nav-item nav-link active" href="/spot">Play your songs</a> -->
+            </div>
+          </div>
+        </div>
+      </div>
+    </nav>
+    <div class="container-fluid">
+      <div class="row">
+        <div class="col-md-4">
+          <aside class="filters">
+            <div class="panel panel-default">
+              <div class="panel-heading">Playlist commands</div>
+              <div class="panel-body">
+                <form>
+                  <hr>
+                  <button id="filter-btn1" type="button" class="btn btn-default" onclick='javascript:nowDelete()'>Delete selected items</button>
+                  <hr>                    
+                  <button id="filter-btn4" type="button" class="btn btn-default" onclick='javascript:nowRev()'>Reverse Playing order</button>
+                  <hr>                    
+                  <button id="filter-btn2" type="button" class="btn btn-default" onclick="window.location.href='/spot2';">Clear list</button>
+                  <hr>
+                  <input class="form-control" type='text' id = 'name'  placeholder="Spotify ID"> 
+                  <input class="form-control" type='text' id = 'playlist'  placeholder="Default Playlist"> 
+
+                  <button id="filter-btn3" type="button" class="btn btn-default" onclick='javascript:nowSubmit()'>Submit Playlist</button> 
+                 </form>
+              </div>
+            </div>
+          </aside>
+        </div>
+        <div class="col-md-8">
+          <div id="table-area" class="table-class">
+            <table id="song-table" class="table table-striped">
+              <thead>
+                <tr>
+                  <th class="table-head">Song Name</th>
+                  <th class='table-head'>Delete</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for res in result: %}
+                <tr>
+
+                  <td>{{ res.name }}</td> <td><input type='checkbox' id='{{res.id}}' name='{{res.name}}'></td>
+
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+    {% endblock content %}
+
+  {% block content2 %}
+  <script src="{{ url_for('static', filename='js/global.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/view.js') }}"></script>
+  {% endblock content2 %}
+

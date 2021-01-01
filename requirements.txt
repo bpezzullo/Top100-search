@@ -9,3 +9,5 @@ dnspython
 pandas
 numpy
 datetime
+spotipy
+sys

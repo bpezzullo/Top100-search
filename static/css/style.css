@@ -78,8 +78,15 @@ select {
   color: #8e979f;
   outline: none;
 }
+.table-area {
+  display: block;
+  height: 200 px;
+  width: 100%;
+}
 
 #table-area th {
+  position: sticky;
+  top: 0;
   text-align: center;
 }
 
@@ -181,7 +188,10 @@ select {
 
   #table-area tbody td {
     display: block;
+    height: 200 px;
+    width: 100%;
     text-align: center;
+    overflow:auto;
   }
 
   #table-area tbody td::before {

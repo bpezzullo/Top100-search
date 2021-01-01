@@ -6,8 +6,7 @@ var perfkey = [], pex, perfselected = [];
 var yearkey = [], yex, yearselected = [];
 var peakkey = [], pox, peekselected = [];
 var itemselected = [];
-var local = ''
-// local = 'http://127.0.0.1:5000'
+
 
 // fucntion to generate the text for the drop downs.
 
@@ -33,34 +32,45 @@ function generateDropDowns(data) {
 
   // console.log(data)
   data.forEach(datarow => {
-    // get the value of the first key "city" and then check to see if the city from the
-    // datarow has already been captured by checking to see if it is in the citykey array.
-    // if it has been skip down to the next key.  If not than push it into the array.
+    // get the value of the different song names and push them into an array
 
-    pex = (datarow[1]);
-    if (perfkey.indexOf(pex) === -1) {
-      perfkey.push(pex);
-    }
     sox = (datarow[0]);
     if (songkey.indexOf(sox) === -1) {
       songkey.push(sox);
     }
-    pox = (datarow[2]);
-    if (peakkey.indexOf(pox) === -1) {
-      peakkey.push(pox);
-    }
-    yex = (datarow[3]);
-    if (yearkey.indexOf(yex) === -1) {
-      yearkey.push(yex);
-    }
+
   });
+
+  url = local + "/get_top100_sql/performer/*"
+  d3.json(url).then(function (data) {
+
+    data.forEach(datarow => {
+
+      pex = (datarow[0]);
+      if (perfkey.indexOf(pex) === -1) {
+        perfkey.push(pex);
+      }
+    });
+
+    perfkey.sort();
+    document.getElementById("performerselect").innerHTML = generatetxt(perfkey);
+  });
+
+  for (var i = 1958; i < 2001; i++) {
+    yearkey.push(i)
+  };
+
+  for (var i = 1; i < 101; i++) {
+    peakkey.push(i)
+  };
+
+
+  document.getElementById("peakselect").innerHTML = generatetxt(peakkey);
   perfkey.sort();
   document.getElementById("performerselect").innerHTML = generatetxt(perfkey);
   songkey.sort();
   document.getElementById("songselect").innerHTML = generatetxt(songkey);
-  peakkey.sort();
-  document.getElementById("peakselect").innerHTML = generatetxt(peakkey);
-  yearkey.sort();
+
   document.getElementById("yearselect").innerHTML = generatetxt(yearkey);
 
 }
@@ -93,9 +103,13 @@ function generateTable(table, performer = 'All', song = 'All', year = 'All', pea
       if (x >= 200) { break; }
       x += 1;
       let row = table.insertRow();
+
       for (i = 0; i < element.length; i++) {
         // console.log(element[i])
         let cell = row.insertCell();
+        if (i > 1) {
+          cell.setAttribute('style','text-align:center')
+        }
         let text = document.createTextNode(element[i]);
         cell.appendChild(text);
       };
@@ -159,4 +173,8 @@ function checkinput() {
   generateTable(table, performerselected, songselected, yearselected, peakselected);
 
 }
+function partialInput() {
+  alert("This function coming in next version.");
+}
+
 
