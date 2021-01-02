@@ -29,7 +29,7 @@ app.config['SECRET_KEY']= 'dev'
 # run in debug mode
 app.debug = False
 global local
-local = False
+local = True
 playlist_item = []
 
 test_running = False
@@ -401,6 +401,11 @@ def graph():
     return render_template('/graph.html')
 
 
+@app.route('/redirect', methods=["GET"])
+def redirect():
+
+    return render_template('/spot2.html')
+
 
 # call the API to load the top 100 file and store into SQL DB if not there.
 @app.route("/reload_top100_sql", methods=["GET","PUT"])
@@ -763,9 +768,10 @@ def get_top100_sql_week(weekid = '*'):
 def push_playlist(spotifyHeader):
     playlist_item = request.get_json()
     spotResults = spotifyHeader.split("/")
-
+    print(spotResults[0],'name',spotResults[1])
     result = spo.test(spotResults[0],playlist_item,spotResults[1])
-    session['token'] = result
+    print('results',result)
+    # session['token'] = result
     return jsonify(result)
 
 @app.route("/view", methods=["GET","POST"])
@@ -781,7 +787,42 @@ def view_playlist():
         print("This is a GET")
         return render_template('/view.html', result= session['playlist'])
 
+# get the songs for a performer from SQL DB
+@app.route("/get_top100_sql/partialsearch/<string:searchInput>",  methods=["GET"])
+@cross_origin()
+def get_top100_sql_partialsearch(searchInput):
 
+    record = []
+
+    db_conn2 =  create_conn()
+    cursor2 = db_conn2.cursor()
+
+    # print("have data: " + searchInput)
+    result = searchInput.lower()
+
+    sql_query_where = "where lower(p.performer) like '%" + result + "%' or lower(name) like '%" + result + "%'"
+
+    sql_order = " order by chartyear desc ,top_position , name "
+    
+    try:
+
+        sql_query = "select name, s.performer, s.top_position, chartyear, weeksonchart,spotify_trackid  from song as s inner join performer as p on s.id = p.id " 
+        sql_query += sql_query_where
+        sql_query += sql_order
+        print(sql_query)  
+        cursor2.execute(sql_query)
+        record = cursor2.fetchall()
+
+
+    except Exception:
+        print(sys.exc_info())
+        print("error occurred", sys.exc_info()[1])
+
+    finally:
+        cursor2.close()
+        db_conn2.close()
+
+    return jsonify(record)
 
 
 

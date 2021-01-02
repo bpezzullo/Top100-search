@@ -76,6 +76,10 @@ function nowSubmit() {
 
   var spotifyUserid = document.getElementById("name").value;
   var spotifyPlaylist = document.getElementById("playlist").value;
+
+  if (spotifyPlaylist = '' ) {spotifyPlaylist = 'Top100 Billboard PlayList'}
+
+  // Check if there are any items to submit
   if (itemsPlaylist.length  != 0)  {
     var spotifyIds = itemsPlaylist.map(function(item) {
       return item.id;
@@ -91,7 +95,7 @@ function nowSubmit() {
       body:JSON.stringify(spotifyIds)
     }).then(data=> { 
       if (data == '') {
-        alert("Check your spotify ID to make sure it is correct");
+        alert("Error in the submit.  Check your spotify ID to make sure it is correct");
         document.getElementById("name").value= ''
         }
       // else {

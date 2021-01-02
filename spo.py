@@ -49,7 +49,7 @@ def test(user,track_ids,playlistName ):
 
 
     except Exception:
-        print(Exception)
+        print("Submit",Exception)
 
     finally:
 
