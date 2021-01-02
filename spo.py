@@ -49,8 +49,11 @@ def test(user,track_ids,playlistName ):
         playlistInfo = sp.user_playlist_replace_tracks(user, playlistId, track_ids)
 
 
-    except Exception:
-        print("Submit",Exception)
+    except Exception as e:
+        print(type(e))
+        print(e)
+        print(e.args)
+        print("Submit")
         token = ''
 
     finally:
