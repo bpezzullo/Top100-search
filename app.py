@@ -768,9 +768,10 @@ def get_top100_sql_week(weekid = '*'):
 def push_playlist(spotifyHeader):
     playlist_item = request.get_json()
     spotResults = spotifyHeader.split("/")
-    print(spotResults[0],'name',spotResults[1])
+
     result = spo.test(spotResults[0],playlist_item,spotResults[1])
     print('results',result)
+    if result == 'Success': redirect('/spot2')
     # session['token'] = result
     return jsonify(result)
 

@@ -16,6 +16,7 @@ def test(user,track_ids,playlistName ):
 
     token = 'Success'
     scope = 'playlist-modify-public'
+    print(CLIENT_ID,REDIRECT_URI)
 
     try:
 
