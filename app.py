@@ -29,7 +29,7 @@ app.config['SECRET_KEY']= 'dev'
 # run in debug mode
 app.debug = False
 global local
-local = True
+local = False
 playlist_item = []
 
 test_running = False

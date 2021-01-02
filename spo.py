@@ -14,42 +14,43 @@ def test(user,track_ids,playlistName ):
     # print('user: ',user,'   playlistname: ',playlistName, 'track_ids: ', track_ids)
     if playlistName == '': playlistName = 'Top100 Billboard PlayList'
 
-    token = ''
+    token = 'Success'
     scope = 'playlist-modify-public'
 
     try:
 
-        token = util.prompt_for_user_token(scope=scope,
-                                    client_id=CLIENT_ID,
-                                    client_secret=CLIENT_SECRET,
-                                    redirect_uri=REDIRECT_URI,
-                                    username = user)
+        # token = util.prompt_for_user_token(scope=scope,
+        #                             client_id=CLIENT_ID,
+        #                             client_secret=CLIENT_SECRET,
+        #                             redirect_uri=REDIRECT_URI,
+        #                             username = user)
 
-        # sp = spotipy.Spotify(auth_manager=SpotifyOAuth(scope=scope,
-        #                                             client_id=client_id,
-        #                                             client_secret=client_secret,
-        #                                             redirect_uri=redirect_uri,
-        #                                             username = user))
-        if token:
-            sp = spotipy.Spotify(auth=token)
-            sp.trace = False
+        sp = spotipy.Spotify(auth_manager=SpotifyOAuth(scope=scope,
+                                                        client_id=CLIENT_ID,
+                                                        client_secret=CLIENT_SECRET,
+                                                        redirect_uri=REDIRECT_URI,
+                                                        username = user))
 
-            playlists = sp.user_playlists(user)
-            playlistId = ''
+            # sp = spotipy.Spotify(auth=token)
+            # sp.trace = False
 
-            for playlist in playlists['items']:
-                if playlist['name'] == playlistName:
-                    playlistId = playlist['id']
-                    break
-            if playlistId == '':
-                playlistInfo = sp.user_playlist_create(user, playlistName, public=True, collaborative=False, description='Created from Top100 songs')
-                playlistId = playlistInfo['id']
+        playlists = sp.user_playlists(user)
+        playlistId = ''
 
-            playlistInfo = sp.user_playlist_replace_tracks(user, playlistId, track_ids)
+        for playlist in playlists['items']:
+            if playlist['name'] == playlistName:
+                playlistId = playlist['id']
+                break
+        if playlistId == '':
+            playlistInfo = sp.user_playlist_create(user, playlistName, public=True, collaborative=False, description='Created from Top100 songs')
+            playlistId = playlistInfo['id']
+
+        playlistInfo = sp.user_playlist_replace_tracks(user, playlistId, track_ids)
 
 
     except Exception:
         print("Submit",Exception)
+        token = ''
 
     finally:
 

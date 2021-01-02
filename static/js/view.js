@@ -77,7 +77,7 @@ function nowSubmit() {
   var spotifyUserid = document.getElementById("name").value;
   var spotifyPlaylist = document.getElementById("playlist").value;
 
-  if (spotifyPlaylist = '' ) {spotifyPlaylist = 'Top100 Billboard PlayList'}
+  if (spotifyPlaylist == '' ) {spotifyPlaylist = 'Top100 Billboard PlayList'}
 
   // Check if there are any items to submit
   if (itemsPlaylist.length  != 0)  {
