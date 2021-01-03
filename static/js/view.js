@@ -1,4 +1,5 @@
 var itemsPlaylist;
+var loginStatus = false;
 
 if (typeof itemsPlaylist === 'undefined') {itemsPlaylist = []}
 
@@ -45,6 +46,9 @@ function rebuildTable(table) {
     let text = document.createTextNode(element.name) 
     cell.appendChild(text);
     cell = row.insertCell();
+    //center the checkbox
+    cell.setAttribute('style','text-align:center');
+
     let check = document.createElement("input");
     check.setAttribute('type','checkbox');
     check.setAttribute('id',element.id);
@@ -70,11 +74,31 @@ function nowRev() {
   itemsPlaylist.reverse();
   rebuildTable(table);
 }
+
+//Submit the playlist to spotify.  Ran into an issue as I am not sure I can do this for other users......
+function nowLogin() {
+  let url = local + '/login'
+
+  d3.json(url).then(function(response) {
+    console.log(response)
+    if (response.slice(0,10) != "Authorized") {
+      location.replace(response)
+      };
+  })
+  .catch(function(error) {console.log('error');
+                          console.error(error);
+  alert("Error something happened.  Try again");
+});
+console.log(loginStatus);
+loginStatus = true;
+}
 //Submit the playlist to spotify.  Ran into an issue as I am not sure I can do this for other users......
 function nowSubmit() {
  // Calls the functions to submit the list to spotify as a playlist
+ var loginStatus = document.getElementById("filter-btn3").value;
 
-  var spotifyUserid = document.getElementById("name").value;
+ if (loginStatus == 1) {
+
   var spotifyPlaylist = document.getElementById("playlist").value;
 
   if (spotifyPlaylist == '' ) {spotifyPlaylist = 'Top100 Billboard PlayList'}
@@ -84,7 +108,7 @@ function nowSubmit() {
     var spotifyIds = itemsPlaylist.map(function(item) {
       return item.id;
     });
-    let url = local + '/submit/' + spotifyUserid + '/' + spotifyPlaylist
+    let url = local + '/submit/' + spotifyPlaylist
     d3.json(url,{
       headers: {
         'Content-Type': 'application/json'
@@ -93,22 +117,30 @@ function nowSubmit() {
       method: 'POST',
 
       body:JSON.stringify(spotifyIds)
-    }).then(data=> { 
-      if (data == '') {
-        alert("Error in the submit.  Check your spotify ID to make sure it is correct");
-        document.getElementById("name").value= ''
-        }
+    }).then(function(response) { 
+        console.log(response);
+        alert('Playlist created.  Create another or listen on your spotify app and enjoy');
+        location.replace(local + '/spot2');
+        })
+        .catch(function(error) {console.error(error);
+        alert("Playlist submit failed.");
+        })
+        .finally(function(data) { console.log("Redirect", data) });
+
       // else {
       //   alert("Playlist saved --- enjoy the music");
       //   location.replace(local + '/spot.html?code='+ data);
       // }
-    })
- 
     }
   else {
       alert("You need to select some songs by using the check boxes.");
     }
   }
+  else {
+      
+    alert("Log into Spotify first!");
+  }
+}
 
   // Rebuild the list.  Need to figure out a better way
 rebuildList();

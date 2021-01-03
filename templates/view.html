@@ -19,7 +19,7 @@
     </nav>
     <div class="container-fluid">
       <div class="row">
-        <div class="col-md-4">
+        <div class="col-md-3">
           <aside class="filters">
             <div class="panel panel-default">
               <div class="panel-heading">Playlist commands</div>
@@ -32,10 +32,10 @@
                   <hr>                    
                   <button id="filter-btn2" type="button" class="btn btn-default" onclick="window.location.href='/spot2';">Clear list</button>
                   <hr>
-                  <input class="form-control" type='text' id = 'name'  placeholder="Spotify ID"> 
-                  <input class="form-control" type='text' id = 'playlist'  placeholder="Default Playlist"> 
-
-                  <button id="filter-btn3" type="button" class="btn btn-default" onclick='javascript:nowSubmit()'>Submit Playlist</button> 
+                  <button id="filter-btn5" type="button" class="btn btn-default" onclick='javascript:nowLogin()'>Login to Spotify</button> 
+                  <hr>
+                  <input class="form-control" type='text' id = 'playlist'  placeholder="Top100 Billboard PlayList"> 
+                  <button id="filter-btn3" type="button" class="btn btn-default" value="{{login}}" onclick='javascript:nowSubmit()'>Submit Playlist</button> 
                  </form>
               </div>
             </div>
@@ -47,14 +47,14 @@
               <thead>
                 <tr>
                   <th class="table-head">Song Name</th>
-                  <th class='table-head'>Delete</th>
+                  <th class='table-head'>Check to Delete a song</th>
                 </tr>
               </thead>
               <tbody>
                 {% for res in result: %}
                 <tr>
 
-                  <td>{{ res.name }}</td> <td><input type='checkbox' id='{{res.id}}' name='{{res.name}}'></td>
+                  <td>{{ res.name }}</td> <td style='text-align:center' ><input type='checkbox' id='{{res.id}}' name='{{res.name}}'></td>
 
                 </tr>
                 {% endfor %}

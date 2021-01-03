@@ -1,8 +1,10 @@
 from flask import Flask, render_template, request, Response, jsonify,redirect,url_for, session
 from flask_cors import CORS, cross_origin
+from flask_session import Session
 from pubsub import pub
 import psycopg2
 from _thread import start_new_thread
+import uuid
 import time
 import requests
 import json
@@ -11,7 +13,10 @@ import os
 import sys
 import datetime
 import re
-import spo
+import spotipy 
+import spotipy.util as util
+from spotipy.oauth2 import SpotifyOAuth
+# import spo
 
 
 DATABASE_URL = os.environ['DATABASE_URL']
@@ -24,7 +29,19 @@ CORS(app, resources={
 })
 app.config['CORS_HEADERS'] = 'Content-Type'
 app.config['CORS_ORIGINS'] = '*'
-app.config['SECRET_KEY']= 'dev'
+app.config['SECRET_KEY']= os.urandom(64)
+app.config['SESSION_TYPE'] = 'filesystem'
+app.config['SESSION_FILE_DIR'] = './.flask_session/'
+
+Session(app)
+
+caches_folder = './.spotify_caches/'
+if not os.path.exists(caches_folder):
+    os.makedirs(caches_folder)
+
+def session_cache_path():
+    return caches_folder + session.get('uuid')
+
 
 # run in debug mode
 app.debug = False
@@ -401,12 +418,6 @@ def graph():
     return render_template('/graph.html')
 
 
-@app.route('/redirect', methods=["GET"])
-def redirect():
-
-    return render_template('/spot2.html')
-
-
 # call the API to load the top 100 file and store into SQL DB if not there.
 @app.route("/reload_top100_sql", methods=["GET","PUT"])
 @cross_origin()
@@ -763,16 +774,12 @@ def get_top100_sql_week(weekid = '*'):
     
     return jsonify(record)
 
-@app.route("/submit/<path:spotifyHeader>", methods=["POST"])
+@app.route("/submit/<string:spotifyHeader>", methods=["GET","POST"])
 @cross_origin()
 def push_playlist(spotifyHeader):
     playlist_item = request.get_json()
-    spotResults = spotifyHeader.split("/")
-
-    result = spo.test(spotResults[0],playlist_item,spotResults[1])
-    print('results',result)
-    if result == 'Success': redirect('/spot2')
-    # session['token'] = result
+    result= test(playlist_item,spotifyHeader)
+    print(result)
     return jsonify(result)
 
 @app.route("/view", methods=["GET","POST"])
@@ -786,7 +793,7 @@ def view_playlist():
 
     else:
         print("This is a GET")
-        return render_template('/view.html', result= session['playlist'])
+        return render_template('/view.html', result = session.get('playlist'), login = 0)
 
 # get the songs for a performer from SQL DB
 @app.route("/get_top100_sql/partialsearch/<string:searchInput>",  methods=["GET"])
@@ -825,7 +832,92 @@ def get_top100_sql_partialsearch(searchInput):
 
     return jsonify(record)
 
+def test(track_ids,playlistName ):
 
+    # print('user: ',user,'   playlistname: ',playlistName, 'track_ids: ', track_ids)
+    if playlistName == '': playlistName = 'Top100 Billboard PlayList'
+
+    result = 'Success'
+
+    # 'user-read-currently-playing playlist-modify-private'
+    scope = 'playlist-modify-public'
+
+    try:
+        auth_manager = spotipy.oauth2.SpotifyOAuth(scope=scope,cache_path=session_cache_path())
+        if not auth_manager.get_cached_token():
+            return jsonify("Failure")
+        print("auth_manager")
+        sp = spotipy.Spotify(auth_manager=auth_manager)
+
+        user = sp.me()["id"]
+
+        print(user)
+
+        playlists = sp.user_playlists(user)
+        playlistId = ''
+
+        for playlist in playlists['items']:
+            if playlist['name'] == playlistName:
+                playlistId = playlist['id']
+                break
+        if playlistId == '':
+            playlistInfo = sp.user_playlist_create(user, playlistName, public=True, collaborative=False, description='Created from Top100 songs')
+            playlistId = playlistInfo['id']
+
+        playlistInfo = sp.user_playlist_replace_tracks(user, playlistId, track_ids)
+
+    except Exception as e:
+        print(type(e))
+        print(e)
+        print(e.args, e.filename,e.strerror)
+        print("Submit")
+        result = 'Failure'
+
+
+    finally:
+
+        # Remove the CACHE file (.cache-test) so that a new user can authorize.
+        os.remove(session_cache_path())
+        session.clear()
+
+        return result
+
+
+@app.route("/login", methods=["GET"])
+def login():
+        # 'user-read-currently-playing playlist-modify-private'
+    scope = 'playlist-modify-public'
+    print(scope)
+
+    if not session.get('uuid'):
+        # Step 1. Visitor is unknown, give random ID
+        session['uuid'] = str(uuid.uuid4())
+        print("session created")
+
+    auth_manager = spotipy.oauth2.SpotifyOAuth(scope=scope,
+                                            cache_path=session_cache_path(), 
+                                            show_dialog=True)
+    print('auth',auth_manager)
+
+    if request.args.get("code"):
+        # Step 3. Being redirected from Spotify auth page
+        token = request.args.get("code")
+        session['token'] = token
+        auth_manager.get_access_token(token)
+        spotify = spotipy.Spotify(auth_manager=auth_manager)
+        return render_template('/view.html', result = session.get('playlist'), login = 1)
+
+    if not auth_manager.get_cached_token():
+        # Step 2. Display sign in link when no token
+        auth_url = auth_manager.get_authorize_url()
+        print(auth_url)
+        # return jsonify(f'<h2><a href="{auth_url}">Sign in</a></h2>'
+        return jsonify(auth_url)
+    print("complete")
+
+    # Step 4. Signed in, display data
+    spotify = spotipy.Spotify(auth_manager=auth_manager)
+    return jsonify('Authorized: ' + spotify.me()["display_name"])
 
 
 
