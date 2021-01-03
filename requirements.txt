@@ -3,6 +3,7 @@ pypubsub
 gunicorn
 whitenoise
 flask_cors
+flask_session
 requests
 psycopg2
 dnspython
