@@ -53,7 +53,7 @@
                   </div>
                   <button id="filter-btn" type="button" class="btn btn-default" onclick='javascript:checkinput()' value='select multiple'>Search Songs</button>
                   <hr>
-                  <input class="form-control" type='text' id = 'partial'  placeholder="Partial search"> 
+                  <input class="form-control" type='text'  id = 'partial'  placeholder="Partial search"> 
                   <button id="filter-btn" type="button" class="btn btn-default" onclick='javascript:partialInput()' >Search Partial</button>
                 </form>
               </div>
@@ -61,7 +61,7 @@
           </aside>
         </div>
         <div class="col-md-10">
-          <div id="table-area" class="table-class">
+          <div id="table-area" class="table-class" style='height:600px; overflow: auto;'>
             <table id="song-table" class="table table-striped">
               <thead>
                 <tr>
@@ -77,6 +77,13 @@
               </tbody>
             </table>
           </div>
+          <!-- <ul class="pagination">
+          <li class="active"><a href="#">1</a></li>
+          <li class="active"><a href="#">2</a></li>
+          <li><a href="#">3</a></li>
+          <li><a href="#">4</a></li>
+          <li><a href="#">5</a></li>
+        </ul>  -->
         </div>
       </div>
     </div>

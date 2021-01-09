@@ -18,9 +18,8 @@
   <div class="row margin-top-50"> 
     <p class="text-center">Check which songs you want in your Spotify playlist</p>
   </div>
-  <div>
     <div class="row">
-      <div class="col-md-2">
+      <div class="col-md-3">
         <aside class="filters">
           <div class="panel panel-default">
             <div class="panel-heading">Song Search</div>
@@ -52,9 +51,12 @@
                 </div>
                 <button id="filter-btn1" type="button" class="btn btn-default" onclick='javascript:checkinput()' value='select multiple'>Search Songs</button>
                 <hr>
+                <input class="form-control" type='text' id = 'partial'  placeholder="Partial search"> 
+                <button id="filter-btn" type="button" class="btn btn-default" onclick='javascript:partialInput()' >Search Partial</button>
+                <hr>
                 <button id="filter-btn2" type="button" class="btn btn-default" onclick='javascript:nowCheck()'>Save selections</button>
                 <hr>
-                <button id="filter-btn3" type="button" class="btn btn-default" onclick='javascript:nowClear()'>Clear list</button>
+                <button id="filter-btn3" type="button" class="btn btn-default" onclick='javascript:nowClear()'>Clear list - 0 songs</button>
                 <hr>
                 <button id="filter-btn4" type="button" class="btn btn-default" onclick='javascript:nowView()'>View list</button>
                </form>
@@ -62,8 +64,8 @@
           </div>
         </aside>
       </div>
-      <div class="col-md-10">
-        <div id="table-area" class="table-class">
+      <div class="col-md-9">
+        <div id="table-area" class="table-class" style='height:800px; overflow: auto;'>
           <table id="song-table" class="table table-striped">
             <thead>
               <tr>
@@ -80,12 +82,24 @@
             </tbody>
           </table>
         </div>
-        <button id="next-btn-p" type="button disabled" class="btn btn-default" onclick='javascript:nowPrev()'>Previous 100 songs</button>
-        <button id="next-btn-n" type="button disabled" class="btn btn-default" onclick='javascript:nowNext()'>Next 100 songs </button>
-        <br>
       </div>
     </div>
-  </div>
+    <div class="row">
+      <div class="col-md-3">
+        </div>
+        <div class="col-md-1">
+      <button id="next-btn-p" type="button" class="btn btn-default" onclick='javascript:nowPrev()'>Previous 100 songs</button>
+      <br>
+      </div>
+      <div class="col-md-6">
+      </div>
+      <div class="col-md-1">
+        <button id="next-btn-n" type="button" class="btn btn-default" onclick='javascript:nowNext()'>Next 100 songs </button>
+        <br>
+        </div>
+
+    </div>
+
     {% endblock content %}
 
   {% block content2 %}
