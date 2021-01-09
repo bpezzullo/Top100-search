@@ -75,15 +75,13 @@ function generateDropDowns(data) {
 
 }
 
-
+var first = false
 // Function that builds the table with song information.
 
-function generateTable(table, performer = 'All', song = 'All', year = 'All', peakpos = 'All') {
-
-  var first = false
+function generateTable(performer = 'All', song = 'All', year = 'All', peakpos = 'All') {
 
   if (song == 'All' && performer == 'All' && year == 'All' && peakpos == 'All') {
-    // Need to build query to gather information.
+    // Need to build query to gather information and the dropdown menus
     url = local + "/get_top100_sql/search/*";
     first = true
   }
@@ -92,11 +90,16 @@ function generateTable(table, performer = 'All', song = 'All', year = 'All', pea
 
     songParms = "name=" + song + "/performer=" + performer + "/chartyear=" + year + "/top_position=" + peakpos
     url = local + "/get_top100_sql/search/" + songParms;
-
   }
+  
+  populateTable(url);
 
+}
+
+function populateTable(url) {
   d3.json(url).then(function(data) {
-    // console.log(data);
+    console.log(data);
+    console.log(first);
     if (first == true) {generateDropDowns(data);}
     var x = 0;
     for (let element of data) {
@@ -147,10 +150,10 @@ function itemsselected(keyname) {
 //
 //
 
-let table = document.querySelector("tbody");
+var table = document.querySelector("tbody");
 
 // generate the table the first time the page is loaded.
-generateTable(table);
+generateTable();
 
 
 // filter table based on the input from the user.  Datetime and country are single elements.
@@ -170,11 +173,22 @@ function checkinput() {
   // clear the table and then check for the right date range.
   clearTable(table, table_size);
  
-  generateTable(table, performerselected, songselected, yearselected, peakselected);
+  generateTable(performerselected, songselected, yearselected, peakselected);
 
 }
 function partialInput() {
-  alert("This function coming in next version.");
-}
+ 
+    var partial = document.getElementById("partial").value;
+    var table_size = document.getElementById("song-table").rows.length;
+
+    first = false;
+    var url = local + '/get_top100_sql/partialsearch/' + partial;
+
+    // clear the table and then check for the right date range.
+    clearTable(table, table_size);
+
+    populateTable(url);
+  
+  }
 
 

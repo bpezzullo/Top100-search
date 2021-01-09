@@ -6,13 +6,24 @@ var perfkey = [], pex, perfselected = [];
 var weekkey = [], wex, weekselected = [];
 var peakkey = [], pox, peekselected = [];
 
+document.getElementById("filter-btn4").disabled = true;
+document.getElementById("filter-btn3").disabled = true;
+document.getElementById("filter-btn2").disabled = true;
+var nextButton = document.getElementById("next-btn-n");
+var prevButton = document.getElementById("next-btn-p");
+nextButton.disabled = true, 
+prevButton.disabled = true;
+
 var itemsPlaylist;
 
 if (typeof itemsPlaylist === 'undefined') {itemsPlaylist = []}
 
+let clearButton = document.getElementById("filter-btn3");
+let viewButton = document.getElementById("filter-btn4");
+let saveButton = document.getElementById("filter-btn2");
 var itemselected = [];
-var saved_url;
-
+var savedLoc;
+var savedurl;
 
 var table = document.querySelector("tbody");
 
@@ -96,48 +107,66 @@ function generateDropDowns() {
 function generateTable(table, performer = 'All', song = 'All', week = 'All', peakpos = 'All', startloc = 0) {
   var urlData = ''
   if (week != 'All') {
-    urlData = 'week='+ week
+    urlData = 'week='+ week;
+    nextButton.disabled = true;
+    prevButton.disabled = true;
+    saveButton.disabled = false;
+    saveTemp = ''
   }
   else {
-    urlData = 'performer=' + performer + '/name=' + song + '/top_position=' + peakpos + '/start=' + startloc
+    urlData = 'performer=' + performer + '/name=' + song + '/top_position=' + peakpos ;
+    nextButton.disabled = false;
+    prevButton.disabled = true;
+    saveTemp = '/start=' + startloc
   }
 
   url = local + "/get_top100_sql/select/" + urlData;
 
+  savedurl = url;
+  url += saveTemp;
+
+  savedLoc = startloc;
+  console.log(url,savedurl,savedLoc);
+    populateTable(url);
+
+}
+//Populate Table
+function populateTable(url) {
+
 
   d3.json(url).then(function(data) {
-    // console.log(data);
-    var x = 0;
-    for (let element of data) {
-      x += 1;
-      let row = table.insertRow();
-      for (i = 0; i < element.length; i++) {
-        // console.log(element[i])
-        let cell = row.insertCell();
-        if (i > 1) {
-          cell.setAttribute('style','text-align:center')
-        }
-        if (i == element.length - 1) {
-          // console.log(element[i]);
-          if (element[i] != null) {
-            // let text = document.createElement('<input id="' + element[i] + '" type="checkbox"></input>');
-            let check = document.createElement("input");
-            check.setAttribute('type','checkbox');
-            check.setAttribute('id',element[i]);
-            check.setAttribute('value', element[0]);
-            cell.appendChild(check);}
-          else {
-            let text = document.createTextNode("n/a");
-            cell.appendChild(text);
-          }
-        }
-        else {
-          let text = document.createTextNode(element[i]);
-          cell.appendChild(text);}
-      };
-    };
 
-  });
+  var x = 0;
+  for (let element of data) {
+    x += 1;
+    let row = table.insertRow();
+    for (i = 0; i < element.length; i++) {
+      // console.log(element[i])
+      let cell = row.insertCell();
+      if (i > 1) {
+        cell.setAttribute('style','text-align:center')
+      }
+      if (i == element.length - 1) {
+        // console.log(element[i]);
+        if (element[i] != null) {
+          // let text = document.createElement('<input id="' + element[i] + '" type="checkbox"></input>');
+          let check = document.createElement("input");
+          check.setAttribute('type','checkbox');
+          check.setAttribute('id',element[i]);
+          check.setAttribute('value', element[0]);
+          cell.appendChild(check);}
+        else {
+          let text = document.createTextNode("n/a");
+          cell.appendChild(text);
+        }
+      }
+      else {
+        let text = document.createTextNode(element[i]);
+        cell.appendChild(text);}
+    };
+  };
+});
+  return
 }
 
 
@@ -190,9 +219,16 @@ function nowCheck() {
           break;
         }
       }
-
+    
   }
   if (!saved) { alert("You need to select some songs by using the check boxes.");}
+  else {
+
+    clearButton.textContent = "Clear list - " + itemsPlaylist.length + " songs";
+    clearButton.disabled = false;
+
+    viewButton.disabled = false;
+  }
 
 }
 // Search was selected
@@ -203,8 +239,11 @@ function checkinput() {
   var weekselected = document.getElementById("weekselect").value;
   var peakselected = document.getElementById("peakselect").value;
 
-  var table_size = document.getElementById("song-table").rows.length;
+  let table_size = document.getElementById("song-table").rows.length;
   // console.log("Button Hit", performerselected, songselected, yearselected, peakselected, table_size)
+
+  
+  saveButton.disabled = false;
 
   // clear the table and then check for the right date range.
   clearTable(table, table_size);
@@ -230,6 +269,17 @@ function nowClear() {
         cont[i].children[x].children[5].children[0].checked = false
       }
   }
+
+
+  saveButton.disabled = true;
+
+  clearButton.textContent = "Clear list - 0 songs";
+  clearButton.disabled = true;
+
+  viewButton.disabled = true;
+
+  nextButton.disabled = true;
+  prevButton.disabled = true;
 }
 function nowView() {
   // Display the array
@@ -258,15 +308,60 @@ function nowView() {
       alert("You need to select some songs by using the check boxes.");
     }
 }
+// Partial input
+function partialInput() {
+ 
+  var partial = document.getElementById("partial").value;
+  var table_size = document.getElementById("song-table").rows.length;
+
+  first = false;
+  url = local + '/get_top100_sql/partialsearch/' + partial;
+
+  nextButton.disabled = true;
+  prevButton.disabled = true;
+
+  // clear the table and then check for the right date range.
+  clearTable(table, table_size);
+
+  populateTable(url);
+
+}
 
 function nowNext() {
   // next 100
-  alert("This function coming in next version.");
+
+  savedLoc += 100
+  url = savedurl + '/start=' + savedLoc;
+
+  let table_size = document.getElementById("song-table").rows.length;
+
+  // clear the table and then check for the right date range.
+  clearTable(table, table_size);
+  nextButton.disabled = false;
+  prevButton.disabled = false;
+  console.log(url);
+  populateTable(url);
 }
 
 function nowPrev() {
   // next 100
-  alert("This function coming in next version.");
+
+  savedLoc += -100
+  url = savedurl + '/start=' + savedLoc;
+
+  let table_size = document.getElementById("song-table").rows.length;
+
+  // clear the table and then check for the right date range.
+  clearTable(table, table_size);
+  if (savedLoc <= 0) {
+    prevButton.disabled = true;
+  } 
+  else {
+    prevButton.disabled = false;
+  }
+  nextButton.disabled = false;
+
+  populateTable(url);
 }
 
 

@@ -6,6 +6,7 @@ if (typeof itemsPlaylist === 'undefined') {itemsPlaylist = []}
 var table = document.querySelector("tbody");
 var cont = document.getElementById('song-table').children;
 
+
 // Function that will clear out the table from the previous filter
 function clearTable(table, table_size) {
 
@@ -91,6 +92,7 @@ function nowLogin() {
 });
 console.log(loginStatus);
 loginStatus = true;
+
 }
 //Submit the playlist to spotify.  Ran into an issue as I am not sure I can do this for other users......
 function nowSubmit() {

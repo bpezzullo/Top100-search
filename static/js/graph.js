@@ -125,14 +125,14 @@ function multiGraph(songinfo) {
 
     // Once all the data has been retrieved kick off the processing below
     mySongPromises.then(function(songdinfo) {
-
+      // console.log(songdinfo);
       songdinfo.forEach(elem => {       // Capture the number of weeks for the song being on the charts and save it for the graph
         // console.log(elem);
-        lineData.push(buildJS(elem
-          ));
+        lineData.push(buildJS(elem));
         songList.push(elem[0][1]);
       });
 
+      // console.log(songList);
       //create the template to populate the Chartjs module
       for (var i=0;i < songList.length;i++) {
           myLineChart.data.datasets.push({
@@ -149,10 +149,12 @@ function multiGraph(songinfo) {
       // We need to decompose that so that it can be graphed with the other songs
       // first find all the weeks needed to be plotted
       lineData.forEach(data2 => {    
-
-        Object.keys(data2).forEach(key => {myLineData.labels.push(key)});
+        // console.log(data2);
+        Object.keys(data2).forEach(key => {if (myLineData.labels.indexOf(key) === -1) {
+                                                myLineData.labels.push(key)}
+                                              });
+          
       });
-
       // Put the weeks in chronological order.   
       myLineData.labels.sort();
 
@@ -165,7 +167,6 @@ function multiGraph(songinfo) {
         for (var i=0; i < lineData.length; i++) {
           if (lineData[i][key]) {posTemp=lineData[i][key];}
           else { posTemp = 'NaN'; };
-
           myLineChart.data.datasets[i].data.push(posTemp);
         }
       
@@ -239,7 +240,7 @@ function buildJS(songinfo) {
       lineData[key] = element[4];
     });
 
-
+    // console.log(lineData);
     return lineData
 
   }
