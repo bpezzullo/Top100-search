@@ -1,4 +1,4 @@
-Top 100 music search (top100-search.herokuapp.com)
+!Top 100 music search (top100-search.herokuapp.com)
 
 Small application with the top songs from 1958 to 2000.  Looking to include up to 2018 if interests.  The song results of the top 100 songs for each week are store in a postgresSQL database.  I used FLask to drive the application and provide a few APIs that can be used to pull the data from the database.  The application allows a user to pick a set of songs based on filter settings from the database and display information on it.  What was the top position it made, how many weeks on the chart.  In addition, there is the ability to graph a song or set of songs based on what the user is interested in.  Check it out at https://top100-search.herokuapp.com .  Let me know if there is anything you would like to see added.  I am working on a page to interact with Spotify to show the different characteristics of a song.  Long term would be to allow the user to create a Spotify playlist and then transfer the set of songs over to an IOS app to play them.
 
